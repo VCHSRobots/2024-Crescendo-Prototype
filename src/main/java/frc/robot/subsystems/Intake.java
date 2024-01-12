@@ -71,5 +71,6 @@ public class Intake extends SubsystemBase {
     builder.addDoubleProperty("supply current: ", () -> m_intakeMotor.getSupplyCurrent().getValueAsDouble(), null);
     builder.addDoubleProperty("stator current: ", () -> m_intakeMotor.getStatorCurrent().getValueAsDouble(), null);
     builder.addDoubleProperty("voltage: ", () -> m_intakeMotor.getMotorVoltage().getValueAsDouble(), null);
+    builder.addBooleanProperty("piece at intake", () -> isPieceAtIntake(), null);
   }
 }
