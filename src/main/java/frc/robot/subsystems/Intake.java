@@ -60,12 +60,16 @@ public class Intake extends SubsystemBase {
     m_intakeMotor.setControl(m_intakeVoltageOut.withOutput(0));
   }
 
+  public void set(double percentOut) {
+    m_intakeMotor.set(percentOut);
+  }
+
   @Override
   public void initSendable(SendableBuilder builder) {
-      super.initSendable(builder);
-      builder.addDoubleProperty("velocity output (Rot/s): ", () -> m_intakeMotor.getVelocity().getValueAsDouble(), null);
-      builder.addDoubleProperty("supply current: ", () -> m_intakeMotor.getSupplyCurrent().getValueAsDouble(), null);
-      builder.addDoubleProperty("stator current: ", () -> m_intakeMotor.getStatorCurrent().getValueAsDouble(), null);
-      builder.addDoubleProperty("voltage: ", () -> m_intakeMotor.getMotorVoltage().getValueAsDouble(), null);
+    super.initSendable(builder);
+    builder.addDoubleProperty("velocity output (Rot/s): ", () -> m_intakeMotor.getVelocity().getValueAsDouble(), null);
+    builder.addDoubleProperty("supply current: ", () -> m_intakeMotor.getSupplyCurrent().getValueAsDouble(), null);
+    builder.addDoubleProperty("stator current: ", () -> m_intakeMotor.getStatorCurrent().getValueAsDouble(), null);
+    builder.addDoubleProperty("voltage: ", () -> m_intakeMotor.getMotorVoltage().getValueAsDouble(), null);
   }
 }

@@ -21,4 +21,9 @@ public final class Constants {
     public static final int kIntakeMotorId = 1;
     public static final int kProxSensorChannel = 0;
   }
+
+  public static class ShooterConstants {
+    public static final int kShooterMasterMotorId = 3;
+    public static final int kShooterFollowerMotorId = 4;
+  }
 }
