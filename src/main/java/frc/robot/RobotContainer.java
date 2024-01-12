@@ -6,6 +6,7 @@ package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Pivot;
 import frc.robot.subsystems.Shooter;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -25,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
   private final Intake m_intake = new Intake();
   private final Shooter m_shooter = new Shooter();
+  private final Pivot m_pivot = new Pivot();
 
   private final CommandXboxController m_driverController = new CommandXboxController(
       OperatorConstants.kDriverControllerPort);
@@ -53,7 +55,23 @@ public class RobotContainer {
    */
   private void configureBindings() {
     // left y shooter speed
-    m_shooter.setDefaultCommand(new RunCommand(() -> m_shooter.shoot(m_driverController.getLeftY()), m_shooter));
+    m_shooter.setDefaultCommand(new RunCommand(() -> {
+      double leftY = m_driverController.getLeftY();
+      if (Math.abs(leftY) > 0.04) {
+        m_shooter.shoot(m_driverController.getLeftY());
+      } else {
+        m_shooter.shoot(0);
+      }
+    }, m_shooter));
+    // right y shooter speed
+    m_pivot.setDefaultCommand(new RunCommand(() -> {
+      double rightY = m_driverController.getRightY();
+      if (Math.abs(rightY) > 0.04) {
+        m_pivot.set(rightY);
+      } else {
+        m_pivot.set(0);
+      }
+    }, m_pivot));
 
     // right trigger intake speed
     m_driverController.rightTrigger(0.2)

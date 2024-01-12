@@ -29,7 +29,7 @@ public class Shooter extends SubsystemBase {
   private final MotionMagicVelocityVoltage m_shooterVelocityMotionMagic = new MotionMagicVelocityVoltage(0);
   private double motionMagicTargetVelocity = 0;
 
-  /** Creates a new Intake. */
+  /** Creates a new Shooter. */
   public Shooter() {
     TalonFXConfiguration shooterMotorConfig = new TalonFXConfiguration();
     shooterMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;

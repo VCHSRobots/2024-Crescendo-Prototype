@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -93,6 +92,15 @@ public class Pivot extends SubsystemBase {
     double degrees = 0;
   }
 
+  public Command getGotoPositionCommand(POSITION pos) {
+    return runOnce(() -> moveToPosition(pos));
+  }
+
+  public Command getGotoAndWaitPositionCommand(POSITION pos) {
+    return getGotoPositionCommand(pos)
+    .alongWith(Commands.none().until(() -> isAtTarget()));
+  }
+
   private void moveToPosition(POSITION pos) {
     if (m_PeriodicIO.controlState != CONTROL_STATE.MOTION_MAGIC) {
       m_PeriodicIO.controlState = CONTROL_STATE.MOTION_MAGIC;
@@ -106,12 +114,7 @@ public class Pivot extends SubsystemBase {
         && Math.abs(m_PeriodicIO.position - m_PeriodicIO.targetPosition) < 2;
   }
 
-  public Command getGotoPositionCommand(POSITION pos) {
-    return runOnce(() -> moveToPosition(pos));
-  }
-
-  public Command getGotoAndWaitPositionCommand(POSITION pos) {
-    return getGotoPositionCommand(pos)
-    .alongWith(Commands.none().until(() -> isAtTarget()));
+  public void set(double percentOuput) {
+    m_pivot.set(percentOuput);
   }
 }
