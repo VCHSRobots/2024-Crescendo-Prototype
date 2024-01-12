@@ -13,17 +13,16 @@ import com.ctre.phoenix6.signals.MotionMagicIsRunningValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+import frc.robot.Constants.PivotConstants;
 
 /*
  * https://pro.docs.ctr-electronics.com/en/latest/docs/api-reference/device-specific/talonfx/motion-magic.html#motion-magic-expo
  */
 public class Pivot extends SubsystemBase {
 
-  private TalonFX m_pivot = new TalonFX(Constants.kPivotMotor.getDeviceNumber(), Constants.kPivotMotor.getBus());
+  private TalonFX m_pivot = new TalonFX(PivotConstants.kPivotMotor.getDeviceNumber(), PivotConstants.kPivotMotor.getBus());
   private MotionMagicExpoVoltage m_positionVoltageRequest = new MotionMagicExpoVoltage(0);
 
   enum CONTROL_STATE {

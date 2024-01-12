@@ -18,7 +18,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
 
 public class Intake extends SubsystemBase {
-  private final TalonFX m_intakeMotor = new TalonFX(IntakeConstants.kIntakeMotorId);
+  private final TalonFX m_intakeMotor = new TalonFX(IntakeConstants.kIntakeMotorId.getDeviceNumber(),
+      IntakeConstants.kIntakeMotorId.getBus());
   private final DigitalInput m_proxSensor = new DigitalInput(IntakeConstants.kProxSensorChannel);
 
   private VoltageOut m_intakeVoltageOut = new VoltageOut(0);

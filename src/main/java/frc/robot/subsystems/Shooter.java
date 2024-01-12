@@ -20,8 +20,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ShooterConstants;
 
 public class Shooter extends SubsystemBase {
-  private final TalonFX m_shooterMasterMotor = new TalonFX(ShooterConstants.kShooterMasterMotorId);
-  private final TalonFX m_shooterFollowerMotor = new TalonFX(ShooterConstants.kShooterFollowerMotorId);
+  private final TalonFX m_shooterMasterMotor = new TalonFX(ShooterConstants.kShooterMasterMotorId.getDeviceNumber(),
+      ShooterConstants.kShooterMasterMotorId.getBus());
+  private final TalonFX m_shooterFollowerMotor = new TalonFX(ShooterConstants.kShooterFollowerMotorId.getDeviceNumber(),
+      ShooterConstants.kShooterFollowerMotorId.getBus());
 
   private final VoltageOut m_shooterVoltageOut = new VoltageOut(0);
   private final MotionMagicVelocityVoltage m_shooterVelocityMotionMagic = new MotionMagicVelocityVoltage(0);
