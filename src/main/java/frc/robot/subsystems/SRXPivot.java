@@ -56,4 +56,9 @@ public class SRXPivot extends SubsystemBase {
   public double ticksToAngle(double ticks) {
     return ticks / 2048.0 * m_gearRatio * 360.0;
   }
+
+  public void set(double percentOuput) {
+    m_pivotMaster.set(percentOuput);
+  }
+
 }
