@@ -59,6 +59,10 @@ public class SRXPivot extends SubsystemBase {
     return ticks / 2048.0 * m_gearRatio * 360.0;
   }
 
+  public void set(double percentOuput) {
+    m_pivotMaster.set(percentOuput);
+  }
+
   @Override
   public void initSendable(SendableBuilder builder) {
     super.initSendable(builder);
@@ -69,7 +73,8 @@ public class SRXPivot extends SubsystemBase {
     builder.addDoubleProperty("stator current: ", () -> m_pivotMaster.getStatorCurrent(),
         null);
     builder.addDoubleProperty("voltage: ", () -> m_pivotMaster.getMotorOutputVoltage(), null);
-    builder.addDoubleProperty("current position: ", () -> ticksToAngle(m_pivotMaster.getSelectedSensorPosition(0)), null);
+    builder.addDoubleProperty("current position: ", () -> ticksToAngle(m_pivotMaster.getSelectedSensorPosition(0)),
+        null);
     builder.addDoubleProperty("target velocity: ", () -> m_pivotMaster.getClosedLoopTarget(0), null);
   }
 }
