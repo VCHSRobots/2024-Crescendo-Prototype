@@ -16,6 +16,7 @@ import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -48,6 +49,8 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     private final SwerveRequest.ApplyChassisSpeeds autoRequest = new SwerveRequest.ApplyChassisSpeeds();
 
     private Pose2d m_targetRobotPose = new Pose2d();
+
+    private double m_targetRotation = 0;
 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency,
             SwerveModuleConstants... modules) {
@@ -83,6 +86,12 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
 
     public Command getAutoPath(String pathName) {
         return new PathPlannerAuto(pathName);
+    }
+
+    public void periodic() {
+    SmartDashboard.putNumber("current Rotation", getState().Pose.getRotation().getDegrees());
+    SmartDashboard.putNumber("target Rotation", m_targetRobotPose.getRotation().getDegrees());
+    SmartDashboard.putNumber("Last tag Y rotation", Units.radiansToDegrees(lastTag.getRotation().getY()));
     }
 
     @Override
@@ -202,9 +211,9 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             var dY = (lastTag.getX() - goal.getY());
             var targetY = currentPose.getY()+dY;
 
-            var dR = (Units.radiansToDegrees(lastTag.getRotation().getY()) - goal.getRotation().getDegrees());
-            var targetR = currentPose.getRotation().plus(Rotation2d.fromDegrees(dR));
-            
+            var dR = (lastTag.getRotation().getY() - goal.getRotation().getRadians());
+            var targetR = currentPose.getRotation().minus(Rotation2d.fromDegrees(dR));        
+
             SmartDashboard.putNumber("Delta Pose X", dX);
              SmartDashboard.putNumber("Delta Pose Y", dY); 
               SmartDashboard.putNumber("Delta Pose R", dR);
@@ -220,8 +229,8 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             y = m_targetRobotPose.getY()-currentPose.getY();
             y = -Math.copySign(Math.min(Math.abs(y), maxSpeed), y);
 
-            r = m_targetRobotPose.getRotation().minus(currentPose.getRotation()).getDegrees();
-            r = -Math.copySign(Math.min(Math.abs(r), 270), r);
+            r = m_targetRobotPose.getRotation().getDegrees()-currentPose.getRotation().getDegrees();
+            r = Math.copySign(Math.min(Math.abs(r), 270), r);
             SmartDashboard.putNumber("r rate", r);
         }
         
