@@ -16,6 +16,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -64,7 +65,7 @@ public class RobotContainer {
       .withRotationalDeadband(AngularRate * 0.1);
   // Field-centric driving in Closed Loop. Comment above and uncomment below.
   // SwerveRequest.FieldCentric drive = new
-  // SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.Velocity).withDeadband(MaxSpeed
+  // SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.Velocity).withDecoadband(MaxSpeed
   // * 0.1).withRotationalDeadband(AngularRate * 0.1);
 
   SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
@@ -147,6 +148,27 @@ public class RobotContainer {
     drivetrain.registerTelemetry(logger::telemeterize);
 
     m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
+    m_driverController.pov(270).whileTrue(drivetrain.applyRequest(()-> {
+      double x = 0;
+      double y = 0;
+      double r = 0;
+      double maxSpeed = 2.0;
+      var tag = vision.getTagPoseRobotSpace();
+      Pose2d goal = new Pose2d(new Translation2d(1.5, 0), new Rotation2d()); //TODO check whether 180
+
+      x = (tag.getZ()-goal.getX())* 0.5;
+      x = Math.copySign(Math.min(Math.abs(x), maxSpeed),x);
+
+      y = (tag.getX()-goal.getY())* 0.5;
+      y = -Math.copySign(Math.min(Math.abs(y), maxSpeed),y);
+
+      r = (Units.radiansToDegrees(tag.getRotation().getY())-goal.getRotation().getDegrees());
+      r = -Math.copySign(Math.min(Math.abs(r), 270),r);
+
+
+      return forwardStraight.withDeadband(.05).withVelocityX(x).withVelocityY(y).withRotationalRate(Units.degreesToRadians(r));
+    }
+      ));
 
     // testing controller
     m_testController.a().whileTrue(drivetrain.applyRequest(() -> brake));

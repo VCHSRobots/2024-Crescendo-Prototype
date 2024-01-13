@@ -6,6 +6,7 @@ package frc.robot.Vision;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -36,6 +37,11 @@ public class Limelight extends SubsystemBase {
 
   @Override
   public void periodic() {
+
+    SmartDashboard.putNumber("targetPose x", getTagPoseRobotSpace().getX());
+    SmartDashboard.putNumber("targetPose z", getTagPoseRobotSpace().getZ());
+    SmartDashboard.putNumber("targetPose r", getTagPoseRobotSpace().getRotation().getY());
+
     if (enable) {
       Double targetDistance = LimelightHelpers.getTargetPose3d_CameraSpace(ll).getTranslation().getDistance(new Translation3d());
       Double confidence = 1 - ((targetDistance - 1) / 6);
@@ -79,5 +85,9 @@ public class Limelight extends SubsystemBase {
 
   public void trustLL(boolean trust) {
     this.trust = trust;
+  }
+
+  public Pose3d getTagPoseRobotSpace() {
+    return LimelightHelpers.getTargetPose3d_RobotSpace(ll);
   }
 }
