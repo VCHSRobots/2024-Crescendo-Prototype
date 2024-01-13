@@ -34,7 +34,8 @@ public final class Constants {
   }
 
   public static class PivotConstants {
-    public static CanDeviceId kPivotMotor = new CanDeviceId(2, kCanivoreBus);
+    public static CanDeviceId kPivotMasterId = new CanDeviceId(2, kCanivoreBus);
+    public static CanDeviceId kPivotFollowerId = new CanDeviceId(2, kCanivoreBus);
   }
 
   public static String kCanivoreBus = "canivore";

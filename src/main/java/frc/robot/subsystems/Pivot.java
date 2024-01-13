@@ -21,8 +21,8 @@ import frc.robot.Constants.PivotConstants;
  */
 public class Pivot extends SubsystemBase {
 
-  private TalonFX m_pivot = new TalonFX(PivotConstants.kPivotMotor.getDeviceNumber(),
-      PivotConstants.kPivotMotor.getBus());
+  private TalonFX m_pivot = new TalonFX(PivotConstants.kPivotMasterId.getDeviceNumber(),
+      PivotConstants.kPivotMasterId.getBus());
   private MotionMagicExpoVoltage m_positionVoltageRequest = new MotionMagicExpoVoltage(0);
 
   enum CONTROL_STATE {
