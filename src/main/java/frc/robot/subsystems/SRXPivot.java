@@ -11,6 +11,7 @@ import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonSRXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PivotConstants;
 
@@ -35,13 +36,14 @@ public class SRXPivot extends SubsystemBase {
     m_pivotFollower.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 30, 30, 0));
 
     TalonSRXConfiguration pivotConfig = new TalonSRXConfiguration();
-    pivotConfig.slot0.kP = 0;
+    pivotConfig.slot0.kP = 1023 / (angleToTicks(360));
     pivotConfig.slot0.kI = 0;
     pivotConfig.slot0.kD = 0;
     pivotConfig.slot0.kF = 0;
 
-    pivotConfig.motionCruiseVelocity = 0;
-    pivotConfig.motionAcceleration = 0;
+    pivotConfig.motionCruiseVelocity = (int) (angleToTicks(0) * 0.1);
+    pivotConfig.motionAcceleration = (int) (angleToTicks(0) * 0.1);
+    ;
     pivotConfig.motionCurveStrength = 0;
   }
 
@@ -49,11 +51,24 @@ public class SRXPivot extends SubsystemBase {
     m_pivotMaster.set(ControlMode.MotionMagic, angleToTicks(angle));
   }
 
-  public double angleToTicks(double angle) {
-    return angle / 360.0 / m_gearRatio * 2048.0;
+  public int angleToTicks(double angle) {
+    return (int) (angle / 360.0 / m_gearRatio * 2048.0);
   }
 
   public double ticksToAngle(double ticks) {
     return ticks / 2048.0 * m_gearRatio * 360.0;
+  }
+
+  @Override
+  public void initSendable(SendableBuilder builder) {
+    super.initSendable(builder);
+    builder.addDoubleProperty("velocity output: ", () -> m_pivotMaster.getSelectedSensorVelocity(),
+        null);
+    builder.addDoubleProperty("supply current: ", () -> m_pivotMaster.getSupplyCurrent(),
+        null);
+    builder.addDoubleProperty("stator current: ", () -> m_pivotMaster.getStatorCurrent(),
+        null);
+    builder.addDoubleProperty("voltage: ", () -> m_pivotMaster.getMotorOutputVoltage(), null);
+    builder.addDoubleProperty("target velocity: ", () -> m_pivotMaster.getClosedLoopTarget(0), null);
   }
 }
