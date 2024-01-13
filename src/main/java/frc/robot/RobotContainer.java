@@ -25,12 +25,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
-import frc.robot.commands.ExampleCommand;
-import frc.robot.subsystems.ExampleSubsystem;
-import frc.robot.Util.SysIdRoutine.Direction;
-import frc.robot.Vision.Limelight;
-import frc.robot.generated.TunerConstants;
-
 import frc.robot.Util.SysIdRoutine.Direction;
 import frc.robot.Vision.Limelight;
 import frc.robot.generated.TunerConstants;
