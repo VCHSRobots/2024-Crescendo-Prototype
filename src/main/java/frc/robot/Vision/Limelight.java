@@ -19,6 +19,7 @@ import frc.robot.Util.RectanglePoseArea;
 public class Limelight extends SubsystemBase {
   CommandSwerveDrivetrain drivetrain;
   Alliance alliance;
+  public Pose3d lastTagPose = new Pose3d();
   private String ll = "limelight";
   private Boolean enable = false;
   private Boolean trust = false;

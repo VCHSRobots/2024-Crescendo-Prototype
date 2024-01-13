@@ -17,6 +17,7 @@ import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -26,12 +27,14 @@ import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Util.ModifiedSignalLogger;
 import frc.robot.Util.SwerveVoltageRequest;
 import frc.robot.Util.SysIdRoutine;
 import frc.robot.Util.SysIdRoutine.Direction;
+import frc.robot.Vision.Limelight;
 import frc.robot.generated.TunerConstants;
 
 import static edu.wpi.first.units.Units.*;
@@ -43,6 +46,8 @@ import static edu.wpi.first.units.Units.*;
  */
 public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsystem {
     private final SwerveRequest.ApplyChassisSpeeds autoRequest = new SwerveRequest.ApplyChassisSpeeds();
+
+    private Pose2d m_targetRobotPose = new Pose2d();
 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency,
             SwerveModuleConstants... modules) {
@@ -179,36 +184,48 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         }
     }
 
+    Pose3d lastTag = new Pose3d();
+
     public SwerveRequest limeLightTracking() {
+        Pose2d currentPose = getState().Pose;
         double x = 0;
         double y = 0;
         double r = 0;
         double maxSpeed = 3.0;
+        Pose2d goal = new Pose2d(new Translation2d(1.5, 0), new Rotation2d());
+
         if (RobotContainer.vision.isTargetValid()) {
-            var tag = RobotContainer.vision.getTagPoseRobotSpace();
-            Pose2d goal = new Pose2d(new Translation2d(1.5, 0), new Rotation2d());
+            lastTag = RobotContainer.vision.getTagPoseRobotSpace();
+            var dX = (lastTag.getZ() - goal.getX());
+            var targetX = currentPose.getX()+dX;
 
-            x = (tag.getZ() - goal.getX());
-            if (Math.abs(x) > 0.5) {
-                x = Math.copySign(Math.min(Math.abs(x), maxSpeed), x);
-            } else {
-                x = 0;
-            }
+            var dY = (lastTag.getX() - goal.getY());
+            var targetY = currentPose.getY()+dY;
 
-            if (Math.abs(y) > 0.5) {
-                y = (tag.getX() - goal.getY());
-                y = -Math.copySign(Math.min(Math.abs(y), maxSpeed), y);
-            } else {
-                y = 0;
-            }
+            var dR = (Units.radiansToDegrees(lastTag.getRotation().getY()) - goal.getRotation().getDegrees());
+            var targetR = currentPose.getRotation().plus(Rotation2d.fromDegrees(dR));
+            
+            SmartDashboard.putNumber("Delta Pose X", dX);
+             SmartDashboard.putNumber("Delta Pose Y", dY); 
+              SmartDashboard.putNumber("Delta Pose R", dR);
+            SmartDashboard.putNumber("target R", targetR.getDegrees());
 
-            if (Math.abs(r) > 3) {
-                r = (Units.radiansToDegrees(tag.getRotation().getY()) - goal.getRotation().getDegrees());
-                r = -Math.copySign(Math.min(Math.abs(r), 270), r);
-            } else {
-                r = 0;
-            }
+            m_targetRobotPose = new Pose2d(new Translation2d(targetX, targetY), targetR);
         }
+        
+        if (currentPose.getTranslation().getDistance(m_targetRobotPose.getTranslation()) > 0.1) {
+            x = m_targetRobotPose.getX()-currentPose.getX();
+            x = Math.copySign(Math.min(Math.abs(x), maxSpeed), x);
+
+            y = m_targetRobotPose.getY()-currentPose.getY();
+            y = -Math.copySign(Math.min(Math.abs(y), maxSpeed), y);
+
+            r = m_targetRobotPose.getRotation().minus(currentPose.getRotation()).getDegrees();
+            r = -Math.copySign(Math.min(Math.abs(r), 270), r);
+            SmartDashboard.putNumber("r rate", r);
+        }
+        
+       
         var forwardStraight = new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
         return forwardStraight.withDeadband(.05).withVelocityX(x).withVelocityY(y)
                 .withRotationalRate(Units.degreesToRadians(r));
