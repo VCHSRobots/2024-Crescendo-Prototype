@@ -63,15 +63,13 @@ public class RobotContainer {
         m_shooter.shoot(0);
       }
     }, m_shooter));
-    // right y shooter speed
-    m_pivot.setDefaultCommand(new RunCommand(() -> {
-      double rightY = m_driverController.getRightY();
-      if (Math.abs(rightY) > 0.04) {
-        m_pivot.set(rightY);
-      } else {
-        m_pivot.set(0);
-      }
-    }, m_pivot));
+
+    // right bumper lower pivot
+    m_driverController.rightBumper()
+        .whileTrue(new RunCommand(() -> m_pivot.set(0.3), m_pivot).finallyDo(() -> m_pivot.set(0)));
+    // right bumper raise pivot
+    m_driverController.leftBumper()
+        .whileTrue(new RunCommand(() -> m_pivot.set(-0.3), m_pivot).finallyDo(() -> m_pivot.set(0)));
 
     // right trigger intake speed
     m_driverController.rightTrigger(0.2)
