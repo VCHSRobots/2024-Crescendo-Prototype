@@ -22,7 +22,8 @@ import frc.robot.Constants.PivotConstants;
  */
 public class Pivot extends SubsystemBase {
 
-  private TalonFX m_pivot = new TalonFX(PivotConstants.kPivotMotor.getDeviceNumber(), PivotConstants.kPivotMotor.getBus());
+  private TalonFX m_pivot = new TalonFX(PivotConstants.kPivotMotor.getDeviceNumber(),
+      PivotConstants.kPivotMotor.getBus());
   private MotionMagicExpoVoltage m_positionVoltageRequest = new MotionMagicExpoVoltage(0);
 
   enum CONTROL_STATE {
@@ -93,6 +94,15 @@ public class Pivot extends SubsystemBase {
     double degrees = 0;
   }
 
+  public Command getGotoPositionCommand(POSITION pos) {
+    return runOnce(() -> moveToPosition(pos));
+  }
+
+  public Command getGotoAndWaitPositionCommand(POSITION pos) {
+    return getGotoPositionCommand(pos)
+        .alongWith(Commands.none().until(() -> isAtTarget()));
+  }
+
   private void moveToPosition(POSITION pos) {
     if (m_PeriodicIO.controlState != CONTROL_STATE.MOTION_MAGIC) {
       m_PeriodicIO.controlState = CONTROL_STATE.MOTION_MAGIC;
@@ -106,12 +116,10 @@ public class Pivot extends SubsystemBase {
         && Math.abs(m_PeriodicIO.position - m_PeriodicIO.targetPosition) < 2;
   }
 
-  public Command getGotoPositionCommand(POSITION pos) {
-    return runOnce(() -> moveToPosition(pos));
-  }
-
-  public Command getGotoAndWaitPositionCommand(POSITION pos) {
-    return getGotoPositionCommand(pos)
-    .alongWith(Commands.none().until(() -> isAtTarget()));
+  public void set(double percentOuput) {
+    if (m_PeriodicIO.controlState != CONTROL_STATE.OPEN_LOOP) {
+      m_PeriodicIO.controlState = CONTROL_STATE.OPEN_LOOP;
+    }
+    m_pivot.set(percentOuput);
   }
 }

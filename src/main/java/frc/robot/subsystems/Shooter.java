@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
@@ -27,6 +28,7 @@ public class Shooter extends SubsystemBase {
 
   private final VoltageOut m_shooterVoltageOut = new VoltageOut(0);
   private final MotionMagicVelocityVoltage m_shooterVelocityMotionMagic = new MotionMagicVelocityVoltage(0);
+  private final StatusSignal<Double> m_shooterVelocity = m_shooterMasterMotor.getVelocity();
   private double motionMagicTargetVelocity = 0;
 
   /** Creates a new Intake. */
@@ -40,7 +42,7 @@ public class Shooter extends SubsystemBase {
     shooterMotorConfig.CurrentLimits.SupplyCurrentLimit = 40;
     shooterMotorConfig.CurrentLimits.SupplyTimeThreshold = .00;
 
-    shooterMotorConfig.Feedback.SensorToMechanismRatio = 1; // todo: gear ratio
+    shooterMotorConfig.Feedback.SensorToMechanismRatio = 1; // TODO: gear ratio
 
     // https://v6.docs.ctr-electronics.com/en/stable/docs/api-reference/device-specific/talonfx/motion-magic.html#using-motion-magic-velocity-in-api
     var slot0Configs = shooterMotorConfig.Slot0;
@@ -52,14 +54,13 @@ public class Shooter extends SubsystemBase {
     slot0Configs.kD = 0;
 
     var motionMagicConfigs = shooterMotorConfig.MotionMagic;
-    motionMagicConfigs.MotionMagicCruiseVelocity = 0;
     motionMagicConfigs.MotionMagicAcceleration = 50;
     motionMagicConfigs.MotionMagicJerk = 0;
 
     m_shooterMasterMotor.getConfigurator().apply(shooterMotorConfig);
     m_shooterFollowerMotor.getConfigurator().apply(shooterMotorConfig);
 
-    m_shooterFollowerMotor.setControl(new Follower(m_shooterMasterMotor.getDeviceID(), true));
+    m_shooterFollowerMotor.setControl(new Follower(m_shooterMasterMotor.getDeviceID(), true)); // TODO: find
   }
 
   public Command getSpeedUpToVelocityCommand(double velocity) {
@@ -81,7 +82,7 @@ public class Shooter extends SubsystemBase {
   }
 
   public boolean isMotionMagicVelocityAtTarget() {
-    return Math.abs(m_shooterMasterMotor.getVelocity().getValueAsDouble() - motionMagicTargetVelocity) < 10;
+    return Math.abs(m_shooterVelocity.getValueAsDouble() - motionMagicTargetVelocity) < 10;
   }
 
   public void setTargetVelocity(double velocity) {
@@ -94,9 +95,14 @@ public class Shooter extends SubsystemBase {
   }
 
   @Override
+  public void periodic() {
+    m_shooterVelocity.refresh();
+  }
+
+  @Override
   public void initSendable(SendableBuilder builder) {
     super.initSendable(builder);
-    builder.addDoubleProperty("velocity output (Rot/s): ", () -> m_shooterMasterMotor.getVelocity().getValueAsDouble(),
+    builder.addDoubleProperty("velocity output (Rot/s): ", () -> m_shooterVelocity.getValueAsDouble(),
         null);
     builder.addDoubleProperty("supply current: ", () -> m_shooterMasterMotor.getSupplyCurrent().getValueAsDouble(),
         null);
