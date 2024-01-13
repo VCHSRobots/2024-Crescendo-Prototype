@@ -4,51 +4,165 @@
 
 package frc.robot;
 
-import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.Autos;
-import frc.robot.commands.ExampleCommand;
-import frc.robot.subsystems.ExampleSubsystem;
+import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
+
+import java.util.function.Supplier;
+
+import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.AutoBuilder;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
+import frc.robot.Constants.OperatorConstants;
+import frc.robot.commands.Autos;
+import frc.robot.commands.ExampleCommand;
+import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.Util.SysIdRoutine.Direction;
+import frc.robot.Vision.Limelight;
+import frc.robot.generated.TunerConstants;
+
+import frc.robot.Util.SysIdRoutine.Direction;
+import frc.robot.Vision.Limelight;
+import frc.robot.generated.TunerConstants;
+
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * This class is where the bulk of the robot should be declared. Since
+ * Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in
+ * the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of
+ * the robot (including
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-  // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
+  private SendableChooser<Command> autoChooser;
+  private SendableChooser<String> controlChooser = new SendableChooser<>();
+  private SendableChooser<Double> speedChooser = new SendableChooser<>();
+  private double MaxSpeed = TunerConstants.kSpeedAt12VoltsMps; // Initial max is true top speed
+  private final double TurtleSpeed = 0.1; // Reduction in speed from Max Speed, 0.1 = 10%
+  private final double MaxAngularRate = Math.PI * 1.5; // .75 rotation per second max angular velocity. Adjust for max
+                                                       // turning rate speed.
+  private final double TurtleAngularRate = Math.PI * 0.5; // .75 rotation per second max angular velocity. Adjust for
+                                                          // max turning rate speed.
+  private double AngularRate = MaxAngularRate; // This will be updated when turtle and reset to MaxAngularRate
 
-  // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final CommandXboxController m_driverController =
-      new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  private final CommandXboxController m_driverController = new CommandXboxController(
+      OperatorConstants.kDriverControllerPort);
+  private final CommandXboxController m_operatorController = new CommandXboxController(1); // operator xbox controller
+  private final CommandXboxController m_testController = new CommandXboxController(2);
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain; // drivetrain
+
+  // Field-centric driving in Open Loop, can change to closed loop after
+  // characterization
+  SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withDeadband(MaxSpeed * 0.1)
+      .withRotationalDeadband(AngularRate * 0.1);
+  // Field-centric driving in Closed Loop. Comment above and uncomment below.
+  // SwerveRequest.FieldCentric drive = new
+  // SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.Velocity).withDeadband(MaxSpeed
+  // * 0.1).withRotationalDeadband(AngularRate * 0.1);
+
+  SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+  SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric()
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+  SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+
+  Limelight vision = new Limelight(drivetrain);
+
+  Telemetry logger = new Telemetry(MaxSpeed);
+
+  Pose2d odomStart = new Pose2d(0, 0, new Rotation2d(0, 0));
+
+  private Supplier<SwerveRequest> controlStyle = () -> drive.withVelocityX(-m_driverController.getLeftY() * MaxSpeed) // Drive
+                                                                                                                      // forward
+                                                                                                                      // -Y
+      .withVelocityY(-m_driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+      .withRotationalRate(-m_driverController.getRightX() * AngularRate); // Drive counterclockwise with negative X
+                                                                          // (left);
+
+  private Double lastSpeed = 0.65;
+
+  /**
+   * The container for the robot. Contains subsystems, OI devices, and commands.
+   */
   public RobotContainer() {
+    // Detect if controllers are missing / Stop multiple warnings
+    DriverStation.silenceJoystickConnectionWarning(true);
+
+    // Build an auto chooser. This will use Commands.none() as the default option.
+    autoChooser = AutoBuilder.buildAutoChooser();
+
+    controlChooser.setDefaultOption("2 Joysticks", "2 Joysticks");
+    controlChooser.addOption("1 Joystick Rotation Triggers", "1 Joystick Rotation Triggers");
+    controlChooser.addOption("Split Joysticks Rotation Triggers", "Split Joysticks Rotation Triggers");
+    controlChooser.addOption("2 Joysticks with Gas Pedal", "2 Joysticks with Gas Pedal");
+    SmartDashboard.putData("Control Chooser", controlChooser);
+    speedChooser.addOption("100%", 1.0);
+    speedChooser.addOption("95%", 0.95);
+    speedChooser.addOption("90%", 0.9);
+    speedChooser.addOption("85%", 0.85);
+    speedChooser.addOption("80%", 0.8);
+    speedChooser.addOption("75%", 0.75);
+    speedChooser.addOption("70%", 0.7);
+    speedChooser.setDefaultOption("65%", 0.65);
+    speedChooser.addOption("60%", 0.6);
+    speedChooser.addOption("55%", 0.55);
+    speedChooser.addOption("50%", 0.5);
+    speedChooser.addOption("35%", 0.35);
+    SmartDashboard.putData("Speed Limit", speedChooser);
+
+    SmartDashboard.putData("Auto Chooser", autoChooser);
     // Configure the trigger bindings
     configureBindings();
   }
 
   /**
-   * Use this method to define your trigger->command mappings. Triggers can be created via the
-   * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
+   * Use this method to define your trigger->command mappings. Triggers can be
+   * created via the
+   * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with
+   * an arbitrary
    * predicate, or via the named factories in {@link
-   * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
-   * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
-   * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
+   * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for
+   * {@link
+   * CommandXboxController
+   * Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
+   * PS4} controllers or
+   * {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
    * joysticks}.
    */
   private void configureBindings() {
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-    new Trigger(m_exampleSubsystem::exampleCondition)
-        .onTrue(new ExampleCommand(m_exampleSubsystem));
+    newSpeed();
 
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
-    m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
+    drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
+        drivetrain.applyRequest(controlStyle).ignoringDisable(true));
+
+    if (Utils.isSimulation()) {
+      drivetrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(0)));
+    }
+    drivetrain.registerTelemetry(logger::telemeterize);
+
+    m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
+
+    // testing controller
+    m_testController.a().whileTrue(drivetrain.applyRequest(() -> brake));
+    m_testController.b().whileTrue(drivetrain
+        .applyRequest(() -> point
+            .withModuleDirection(new Rotation2d(-m_testController.getLeftY(), -m_testController.getLeftX()))));
+    m_testController.x().whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(new Rotation2d())));
+    m_testController.y()
+        .whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(Rotation2d.fromDegrees(90))));
+
   }
 
   /**
@@ -58,6 +172,12 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return Autos.exampleAuto(m_exampleSubsystem);
+    return autoChooser.getSelected();
+
+  }
+
+  private void newSpeed() {
+    lastSpeed = speedChooser.getSelected();
+    MaxSpeed = TunerConstants.kSpeedAt12VoltsMps * lastSpeed;
   }
 }
