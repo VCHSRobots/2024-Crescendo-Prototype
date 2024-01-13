@@ -21,7 +21,8 @@ import frc.robot.Constants.PivotConstants;
  */
 public class Pivot extends SubsystemBase {
 
-  private TalonFX m_pivot = new TalonFX(PivotConstants.kPivotMotor.getDeviceNumber(), PivotConstants.kPivotMotor.getBus());
+  private TalonFX m_pivot = new TalonFX(PivotConstants.kPivotMotor.getDeviceNumber(),
+      PivotConstants.kPivotMotor.getBus());
   private MotionMagicExpoVoltage m_positionVoltageRequest = new MotionMagicExpoVoltage(0);
 
   enum CONTROL_STATE {
@@ -98,7 +99,7 @@ public class Pivot extends SubsystemBase {
 
   public Command getGotoAndWaitPositionCommand(POSITION pos) {
     return getGotoPositionCommand(pos)
-    .alongWith(Commands.none().until(() -> isAtTarget()));
+        .alongWith(Commands.none().until(() -> isAtTarget()));
   }
 
   private void moveToPosition(POSITION pos) {
@@ -115,6 +116,9 @@ public class Pivot extends SubsystemBase {
   }
 
   public void set(double percentOuput) {
+    if (m_PeriodicIO.controlState != CONTROL_STATE.OPEN_LOOP) {
+      m_PeriodicIO.controlState = CONTROL_STATE.OPEN_LOOP;
+    }
     m_pivot.set(percentOuput);
   }
 }
