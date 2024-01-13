@@ -90,4 +90,8 @@ public class Limelight extends SubsystemBase {
   public Pose3d getTagPoseRobotSpace() {
     return LimelightHelpers.getTargetPose3d_RobotSpace(ll);
   }
+
+  public boolean isTargetValid() {
+    return LimelightHelpers.getTV(ll);
+  }
 }

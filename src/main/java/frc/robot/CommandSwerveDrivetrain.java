@@ -7,6 +7,7 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -15,7 +16,11 @@ import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -32,16 +37,19 @@ import frc.robot.generated.TunerConstants;
 import static edu.wpi.first.units.Units.*;
 
 /**
- * Class that extends the Phoenix SwerveDrivetrain class and implements subsystem
+ * Class that extends the Phoenix SwerveDrivetrain class and implements
+ * subsystem
  * so it can be used in command-based projects easily.
  */
 public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsystem {
     private final SwerveRequest.ApplyChassisSpeeds autoRequest = new SwerveRequest.ApplyChassisSpeeds();
 
-    public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency, SwerveModuleConstants... modules) {
+    public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency,
+            SwerveModuleConstants... modules) {
         super(driveTrainConstants, OdometryUpdateFrequency, modules);
         configurePathPlanner();
     }
+
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
         super(driveTrainConstants, modules);
         configurePathPlanner();
@@ -49,17 +57,19 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
 
     private void configurePathPlanner() {
         AutoBuilder.configureHolonomic(
-            ()->this.getState().Pose, // Supplier of current robot pose
-            this::seedFieldRelative,  // Consumer for seeding pose against auto
-            this::getCurrentRobotChassisSpeeds,
-            (speeds)->this.setControl(autoRequest.withSpeeds(speeds)), // Consumer of ChassisSpeeds to drive the robot
-            new HolonomicPathFollowerConfig(new PIDConstants(10, 0, 0),
-                                            new PIDConstants(10, 0, 0),
-                                            TunerConstants.kSpeedAt12VoltsMps,
-                                            TunerConstants.maxModuleRadius,
-                                            new ReplanningConfig()),
-            () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red, // don't flip path TODO verify how to change this correctly
-            this); // Subsystem for requirements
+                () -> this.getState().Pose, // Supplier of current robot pose
+                this::seedFieldRelative, // Consumer for seeding pose against auto
+                this::getCurrentRobotChassisSpeeds,
+                (speeds) -> this.setControl(autoRequest.withSpeeds(speeds)), // Consumer of ChassisSpeeds to drive the
+                                                                             // robot
+                new HolonomicPathFollowerConfig(new PIDConstants(10, 0, 0),
+                        new PIDConstants(10, 0, 0),
+                        TunerConstants.kSpeedAt12VoltsMps,
+                        TunerConstants.maxModuleRadius,
+                        new ReplanningConfig()),
+                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red, // don't flip path TODO verify
+                                                                                         // how to change this correctly
+                this); // Subsystem for requirements
     }
 
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
@@ -82,34 +92,30 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
 
     private SwerveVoltageRequest driveVoltageRequest = new SwerveVoltageRequest(true);
 
-    private SysIdRoutine m_driveSysIdRoutine =
-    new SysIdRoutine(
-        new SysIdRoutine.Config(null, null, null, ModifiedSignalLogger.logState()),
-        new SysIdRoutine.Mechanism(
-            (Measure<Voltage> volts) -> setControl(driveVoltageRequest.withVoltage(volts.in(Volts))),
-            null,
-            this));
+    private SysIdRoutine m_driveSysIdRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(null, null, null, ModifiedSignalLogger.logState()),
+            new SysIdRoutine.Mechanism(
+                    (Measure<Voltage> volts) -> setControl(driveVoltageRequest.withVoltage(volts.in(Volts))),
+                    null,
+                    this));
 
     private SwerveVoltageRequest steerVoltageRequest = new SwerveVoltageRequest(false);
 
-    private SysIdRoutine m_steerSysIdRoutine =
-    new SysIdRoutine(
-        new SysIdRoutine.Config(null, null, null, ModifiedSignalLogger.logState()),
-        new SysIdRoutine.Mechanism(
-            (Measure<Voltage> volts) -> setControl(steerVoltageRequest.withVoltage(volts.in(Volts))),
-            null,
-            this));
+    private SysIdRoutine m_steerSysIdRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(null, null, null, ModifiedSignalLogger.logState()),
+            new SysIdRoutine.Mechanism(
+                    (Measure<Voltage> volts) -> setControl(steerVoltageRequest.withVoltage(volts.in(Volts))),
+                    null,
+                    this));
 
-    private SysIdRoutine m_slipSysIdRoutine =
-    new SysIdRoutine(
-        new SysIdRoutine.Config(Volts.of(0.25).per(Seconds.of(1)), null, null, ModifiedSignalLogger.logState()),
-        new SysIdRoutine.Mechanism(
-            (Measure<Voltage> volts) -> setControl(driveVoltageRequest.withVoltage(volts.in(Volts))),
-            null,
-            this));
-    
-    public Command runDriveQuasiTest(Direction direction)
-    {
+    private SysIdRoutine m_slipSysIdRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(Volts.of(0.25).per(Seconds.of(1)), null, null, ModifiedSignalLogger.logState()),
+            new SysIdRoutine.Mechanism(
+                    (Measure<Voltage> volts) -> setControl(driveVoltageRequest.withVoltage(volts.in(Volts))),
+                    null,
+                    this));
+
+    public Command runDriveQuasiTest(Direction direction) {
         return m_driveSysIdRoutine.quasistatic(direction);
     }
 
@@ -117,8 +123,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         return m_driveSysIdRoutine.dynamic(direction);
     }
 
-    public Command runSteerQuasiTest(Direction direction)
-    {
+    public Command runSteerQuasiTest(Direction direction) {
         return m_steerSysIdRoutine.quasistatic(direction);
     }
 
@@ -126,8 +131,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         return m_steerSysIdRoutine.dynamic(direction);
     }
 
-    public Command runDriveSlipTest()
-    {
+    public Command runDriveSlipTest() {
         return m_slipSysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward);
     }
 
@@ -173,5 +177,40 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             torqueCurrentConfigs.PeakForwardTorqueCurrent = torqueCurrentLimit;
             torqueCurrentConfigs.PeakReverseTorqueCurrent = -torqueCurrentLimit;
         }
+    }
+
+    public SwerveRequest limeLightTracking() {
+        double x = 0;
+        double y = 0;
+        double r = 0;
+        double maxSpeed = 3.0;
+        if (RobotContainer.vision.isTargetValid()) {
+            var tag = RobotContainer.vision.getTagPoseRobotSpace();
+            Pose2d goal = new Pose2d(new Translation2d(1.5, 0), new Rotation2d());
+
+            x = (tag.getZ() - goal.getX());
+            if (Math.abs(x) > 0.5) {
+                x = Math.copySign(Math.min(Math.abs(x), maxSpeed), x);
+            } else {
+                x = 0;
+            }
+
+            if (Math.abs(y) > 0.5) {
+                y = (tag.getX() - goal.getY());
+                y = -Math.copySign(Math.min(Math.abs(y), maxSpeed), y);
+            } else {
+                y = 0;
+            }
+
+            if (Math.abs(r) > 3) {
+                r = (Units.radiansToDegrees(tag.getRotation().getY()) - goal.getRotation().getDegrees());
+                r = -Math.copySign(Math.min(Math.abs(r), 270), r);
+            } else {
+                r = 0;
+            }
+        }
+        var forwardStraight = new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        return forwardStraight.withDeadband(.05).withVelocityX(x).withVelocityY(y)
+                .withRotationalRate(Units.degreesToRadians(r));
     }
 }
