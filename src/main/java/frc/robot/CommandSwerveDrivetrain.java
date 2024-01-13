@@ -84,7 +84,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
 
     private SysIdRoutine m_driveSysIdRoutine =
     new SysIdRoutine(
-        new SysIdRoutine.Config(null, null, null, ModifiedSignalLogger.logState()),
+        new SysIdRoutine.Config(Volts.of(0.2).per(Seconds.of(1)), Volts.of(10), null, ModifiedSignalLogger.logState()),
         new SysIdRoutine.Mechanism(
             (Measure<Voltage> volts) -> setControl(driveVoltageRequest.withVoltage(volts.in(Volts))),
             null,
@@ -94,7 +94,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
 
     private SysIdRoutine m_steerSysIdRoutine =
     new SysIdRoutine(
-        new SysIdRoutine.Config(null, null, null, ModifiedSignalLogger.logState()),
+        new SysIdRoutine.Config(Volts.of(0.1).per(Seconds.of(1)), null, null, ModifiedSignalLogger.logState()),
         new SysIdRoutine.Mechanism(
             (Measure<Voltage> volts) -> setControl(steerVoltageRequest.withVoltage(volts.in(Volts))),
             null,
