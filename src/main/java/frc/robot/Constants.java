@@ -24,19 +24,20 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-    public static final CanDeviceId kIntakeMotorId = new CanDeviceId(1, kCanivoreBus);
+    public static final CanDeviceId kIntakeMotorId = new CanDeviceId(1, kRioBus);
     public static final int kProxSensorChannel = 0;
   }
 
   public static class ShooterConstants {
-    public static final CanDeviceId kShooterMasterMotorId = new CanDeviceId(3, kCanivoreBus);
-    public static final CanDeviceId kShooterFollowerMotorId = new CanDeviceId(4, kCanivoreBus);
+    public static final CanDeviceId kShooterTopMasterMotorId = new CanDeviceId(3, kRioBus);
+    public static final CanDeviceId kShooterBottomFollowerMotorId = new CanDeviceId(4, kRioBus);
   }
 
   public static class PivotConstants {
-    public static CanDeviceId kPivotMasterId = new CanDeviceId(2, kCanivoreBus);
-    public static CanDeviceId kPivotFollowerId = new CanDeviceId(2, kCanivoreBus);
+    public static CanDeviceId kPivotMasterId = new CanDeviceId(5, kRioBus);
+    public static CanDeviceId kPivotFollowerId = new CanDeviceId(6, kCanivoreBus);
   }
 
   public static String kCanivoreBus = "canivore";
+  public static String kRioBus = "rio";
 }

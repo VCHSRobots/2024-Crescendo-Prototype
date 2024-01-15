@@ -9,9 +9,11 @@ import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Pivot;
 import frc.robot.subsystems.SRXPivot;
 import frc.robot.subsystems.Shooter;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -38,6 +40,10 @@ public class RobotContainer {
   public RobotContainer() {
     // Configure the trigger bindings
     configureBindings();
+    Shuffleboard.getTab("ss").add("intake", m_intake);
+    Shuffleboard.getTab("ss").add("shooter", m_shooter);
+    
+    
   }
 
   /**
@@ -65,18 +71,13 @@ public class RobotContainer {
       }
     }, m_shooter));
 
-    // right bumper lower pivot
-    m_driverController.rightBumper()
-        .whileTrue(new RunCommand(() -> m_pivot.set(0.3), m_pivot).finallyDo(() -> m_pivot.set(0)));
-    // right bumper raise pivot
-    m_driverController.leftBumper()
-        .whileTrue(new RunCommand(() -> m_pivot.set(-0.3), m_pivot).finallyDo(() -> m_pivot.set(0)));
+    m_intake.setDefaultCommand(Commands.run(()->m_intake.stop(), m_intake));
 
     // right trigger intake speed
-    m_driverController.rightTrigger(0.2)
+    m_driverController.rightTrigger(0.1)
         .whileTrue(new RunCommand(() -> m_intake.set(m_driverController.getRightTriggerAxis()), m_intake));
     // left trigger reverse speed
-    m_driverController.leftTrigger(0.2)
+    m_driverController.leftTrigger(0.1)
         .whileTrue(new RunCommand(() -> m_intake.set(-m_driverController.getLeftTriggerAxis()), m_intake));
   }
 

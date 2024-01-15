@@ -27,7 +27,7 @@ public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
   public Intake() {
     TalonFXConfiguration intakeMotorConfig = new TalonFXConfiguration();
-    intakeMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    intakeMotorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     intakeMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     intakeMotorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     intakeMotorConfig.CurrentLimits.SupplyCurrentThreshold = 20;
@@ -37,24 +37,19 @@ public class Intake extends SubsystemBase {
     m_intakeMotor.getConfigurator().apply(intakeMotorConfig);
   }
 
-  public Command getIntakeCommand() {
-    return new RunCommand(this::intake, this).finallyDo(this::stop);
-  }
-
-  public Command getReverseCommand() {
-    return new RunCommand(this::reverse, this).finallyDo(this::stop);
-  }
-
+  /*
+   * NORMAL FUNCTIONALITY
+   */
   public boolean isPieceAtIntake() {
-    return m_proxSensor.get();
+    return !m_proxSensor.get();
   }
 
   public void intake() {
-    m_intakeMotor.setControl(m_intakeVoltageOut.withOutput(4));
+    m_intakeMotor.setControl(m_intakeVoltageOut.withOutput(2));
   }
 
   public void reverse() {
-    m_intakeMotor.setControl(m_intakeVoltageOut.withOutput(-4));
+    m_intakeMotor.setControl(m_intakeVoltageOut.withOutput(-2));
   }
 
   public void stop() {
@@ -73,5 +68,16 @@ public class Intake extends SubsystemBase {
     builder.addDoubleProperty("stator current: ", () -> m_intakeMotor.getStatorCurrent().getValueAsDouble(), null);
     builder.addDoubleProperty("voltage: ", () -> m_intakeMotor.getMotorVoltage().getValueAsDouble(), null);
     builder.addBooleanProperty("piece at intake", () -> isPieceAtIntake(), null);
+  }
+
+  /*
+   * COMMANDS
+   */
+  public Command getIntakeCommand() {
+    return run(this::intake).finallyDo(this::stop);
+  }
+
+  public Command getReverseCommand() {
+    return run(this::reverse).finallyDo(this::stop);
   }
 }
