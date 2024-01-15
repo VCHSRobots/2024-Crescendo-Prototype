@@ -100,6 +100,7 @@ public class Shooter extends SubsystemBase {
 
   @Override
   public void initSendable(SendableBuilder builder) {
+    setName("Shooter");
     super.initSendable(builder);
     builder.addDoubleProperty("velocity output (Rot/s): ", () -> m_shooterVelocity.getValueAsDouble(),
         null);

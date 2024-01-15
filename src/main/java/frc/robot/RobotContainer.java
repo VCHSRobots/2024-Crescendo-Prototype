@@ -8,9 +8,11 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Pivot;
 import frc.robot.subsystems.Shooter;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -26,7 +28,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
   private final Intake m_intake = new Intake();
   private final Shooter m_shooter = new Shooter();
-  private final Pivot m_pivot = new Pivot();
 
   private final CommandXboxController m_driverController = new CommandXboxController(
       OperatorConstants.kDriverControllerPort);
@@ -37,6 +38,10 @@ public class RobotContainer {
   public RobotContainer() {
     // Configure the trigger bindings
     configureBindings();
+    Shuffleboard.getTab("ss").add("intake", m_intake);
+    Shuffleboard.getTab("ss").add("shooter", m_shooter);
+    
+    
   }
 
   /**
@@ -65,13 +70,6 @@ public class RobotContainer {
     }, m_shooter));
 
     m_intake.setDefaultCommand(Commands.run(()->m_intake.stop(), m_intake));
-
-    // right bumper lower pivot
-    m_driverController.rightBumper()
-        .whileTrue(new RunCommand(() -> m_pivot.set(0.3), m_pivot).finallyDo(() -> m_pivot.set(0)));
-    // right bumper raise pivot
-    m_driverController.leftBumper()
-        .whileTrue(new RunCommand(() -> m_pivot.set(-0.3), m_pivot).finallyDo(() -> m_pivot.set(0)));
 
     // right trigger intake speed
     m_driverController.rightTrigger(0.1)
