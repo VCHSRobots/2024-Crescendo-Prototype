@@ -36,15 +36,15 @@ public class SRXPivot extends SubsystemBase {
     m_pivotFollower.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 30, 30, 0));
 
     TalonSRXConfiguration pivotConfig = new TalonSRXConfiguration();
-    pivotConfig.slot0.kP = 1023 / (angleToTicks(360));
+    pivotConfig.slot0.kP = 1023 / (angleToTicks(90));
     pivotConfig.slot0.kI = 0;
     pivotConfig.slot0.kD = 0;
     pivotConfig.slot0.kF = 0;
 
     pivotConfig.motionCruiseVelocity = (int) (angleToTicks(0) * 0.1);
     pivotConfig.motionAcceleration = (int) (angleToTicks(0) * 0.1);
-    ;
-    pivotConfig.motionCurveStrength = 0;
+    
+    pivotConfig.motionCurveStrength = 2;
   }
 
   public void goToPosition(double angle) {
@@ -52,15 +52,19 @@ public class SRXPivot extends SubsystemBase {
   }
 
   public int angleToTicks(double angle) {
-    return (int) (angle / 360.0 / m_gearRatio * 2048.0);
+    return (int) (angle / 360.0 * m_gearRatio * 4096.0);
   }
 
   public double ticksToAngle(double ticks) {
-    return ticks / 2048.0 * m_gearRatio * 360.0;
+    return ticks / 4096.0 / m_gearRatio * 360.0;
   }
 
   public void set(double percentOuput) {
     m_pivotMaster.set(percentOuput);
+  }
+
+  public void stop() {
+    m_pivotMaster.set(0);
   }
 
   @Override

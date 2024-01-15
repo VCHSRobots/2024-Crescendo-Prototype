@@ -42,8 +42,7 @@ public class RobotContainer {
     configureBindings();
     Shuffleboard.getTab("ss").add("intake", m_intake);
     Shuffleboard.getTab("ss").add("shooter", m_shooter);
-    
-    
+    Shuffleboard.getTab("ss").add("pivot", m_pivot);
   }
 
   /**
@@ -71,7 +70,15 @@ public class RobotContainer {
       }
     }, m_shooter));
 
-    m_intake.setDefaultCommand(Commands.run(()->m_intake.stop(), m_intake));
+    m_intake.setDefaultCommand(Commands.run(() -> m_intake.stop(), m_intake));
+    m_pivot.setDefaultCommand(Commands.run(()->m_pivot.stop(), m_pivot));
+
+    // right bumper lower pivot
+    m_driverController.rightBumper()
+        .whileTrue(new RunCommand(() -> m_pivot.set(0.3), m_pivot).finallyDo(() -> m_pivot.set(0)));
+    // right bumper raise pivot
+    m_driverController.leftBumper()
+        .whileTrue(new RunCommand(() -> m_pivot.set(-0.3), m_pivot).finallyDo(() -> m_pivot.set(0)));
 
     // right trigger intake speed
     m_driverController.rightTrigger(0.1)
