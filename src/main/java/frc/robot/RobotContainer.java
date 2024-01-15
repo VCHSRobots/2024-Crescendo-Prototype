@@ -13,6 +13,7 @@ import frc.robot.subsystems.SRXPivot.POSITION;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -72,13 +73,14 @@ public class RobotContainer {
     }, m_shooter));
 
     m_intake.setDefaultCommand(Commands.run(() -> m_intake.stop(), m_intake));
-    m_pivot.setDefaultCommand(m_pivot.defaultCmd());
+    // m_pivot.setDefaultCommand(m_pivot.getHoldPositionCommand());
+
     // right bumper lower pivot
     m_driverController.rightBumper()
-        .whileTrue(new RunCommand(() -> m_pivot.set(0.3), m_pivot).finallyDo(() -> m_pivot.set(0)));
+        .whileTrue(new RunCommand(() -> m_pivot.set(0.4), m_pivot).finallyDo(() -> m_pivot.setTargetDegreesToCurrentPosition()));
     // right bumper raise pivot
     m_driverController.leftBumper()
-        .whileTrue(new RunCommand(() -> m_pivot.set(-0.3), m_pivot).finallyDo(() -> m_pivot.set(0)));
+        .whileTrue(new RunCommand(() -> m_pivot.set(-0.4), m_pivot).finallyDo(() -> m_pivot.setTargetDegreesToCurrentPosition()));
 
     // right trigger intake speed
     m_driverController.rightTrigger(0.1)
@@ -91,6 +93,9 @@ public class RobotContainer {
     m_driverController.b().whileTrue(m_pivot.getGotoPositionCommand(POSITION.AMP));
     m_driverController.x().whileTrue(m_pivot.getGotoPositionCommand(POSITION.SOURCE));
     m_driverController.y().whileTrue(m_pivot.getGotoPositionCommand(POSITION.SPEAKER));
+
+    // zero
+    m_driverController.back().onTrue(new InstantCommand(() -> m_pivot.zero(), m_pivot));
   }
 
   /**

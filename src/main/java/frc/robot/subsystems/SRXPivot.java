@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
@@ -15,6 +16,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PivotConstants;
 
@@ -31,9 +33,9 @@ public class SRXPivot extends SubsystemBase {
 
   public enum POSITION {
     HOME(0),
-    AMP(45),
-    SPEAKER(90),
-    SOURCE(135);
+    AMP(90),
+    SPEAKER(30),
+    SOURCE(90);
 
     POSITION(double deg) {
       degrees = deg;
@@ -44,8 +46,8 @@ public class SRXPivot extends SubsystemBase {
 
   public class PeriodicIO {
     public CONTROL_STATE controlState = CONTROL_STATE.OPEN_LOOP;
-    public double targetPosition = 0;
-    public double position = 0;
+    public double targetTicks = 0;
+    public double positionTicks = 0;
   }
 
   private PeriodicIO m_PeriodicIO = new PeriodicIO();
@@ -55,26 +57,33 @@ public class SRXPivot extends SubsystemBase {
     m_pivotMaster.configFactoryDefault();
     m_pivotFollower.configFactoryDefault();
 
-    m_pivotFollower.follow(m_pivotMaster);
-
     m_pivotMaster.setNeutralMode(NeutralMode.Brake);
     m_pivotFollower.setNeutralMode(NeutralMode.Brake);
     m_pivotMaster.setInverted(InvertType.None);
     m_pivotFollower.setInverted(InvertType.OpposeMaster);
-    m_pivotMaster.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 30, 30, 0));
-    m_pivotFollower.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 30, 30, 0));
 
     TalonSRXConfiguration pivotConfig = new TalonSRXConfiguration();
-    pivotConfig.slot0.kP = 1023 / (angleToTicks(70));
+    pivotConfig.slot0.kP = 1023.0 / (angleToTicks(40));
     pivotConfig.slot0.kI = 0;
     pivotConfig.slot0.kD = 0;
     pivotConfig.slot0.kF = 0;
     pivotConfig.primaryPID.selectedFeedbackSensor = FeedbackDevice.CTRE_MagEncoder_Relative;
 
-    pivotConfig.motionCruiseVelocity = (int) (angleToTicks(25) * 0.1);
-    pivotConfig.motionAcceleration = (int) (angleToTicks(25) * 0.1);
+    pivotConfig.voltageCompSaturation = 12;
+
+    pivotConfig.motionCruiseVelocity = (int) (angleToTicks(55) * 0.1);
+    pivotConfig.motionAcceleration = (int) (angleToTicks(75) * 0.1);
 
     pivotConfig.motionCurveStrength = 2;
+
+    m_pivotMaster.configAllSettings(pivotConfig);
+    m_pivotFollower.configAllSettings(pivotConfig);
+
+    m_pivotMaster.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 30, 30, 0));
+    m_pivotFollower.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 30, 30, 0));
+    m_pivotMaster.enableVoltageCompensation(true);
+    m_pivotFollower.enableVoltageCompensation(true);
+    m_pivotFollower.follow(m_pivotMaster);
 
     zero();
   }
@@ -87,7 +96,7 @@ public class SRXPivot extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     // read sensors
-    m_PeriodicIO.position = m_pivotMaster.getSelectedSensorPosition();
+    m_PeriodicIO.positionTicks = m_pivotMaster.getSelectedSensorPosition();
 
   }
 
@@ -95,22 +104,25 @@ public class SRXPivot extends SubsystemBase {
     m_pivotMaster.setSelectedSensorPosition(0);
   }
 
-  public void goToPosition(POSITION pos) {
+  public void setTargetDegrees(double degrees) {
     if (m_PeriodicIO.controlState != CONTROL_STATE.MOTION_MAGIC) {
       m_PeriodicIO.controlState = CONTROL_STATE.MOTION_MAGIC;
     }
-    m_PeriodicIO.targetPosition = angleToTicks(pos.degrees);
-    m_pivotMaster.set(ControlMode.MotionMagic, m_PeriodicIO.targetPosition);
-    System.out.println("go to position" + m_PeriodicIO.targetPosition);
+    m_PeriodicIO.targetTicks = angleToTicks(degrees);
+    m_pivotMaster.set(ControlMode.MotionMagic, m_PeriodicIO.targetTicks, DemandType.ArbitraryFeedForward, getFeedForward());
+  }
+
+  public void setTargetDegreesToCurrentPosition() {
+    setTargetDegrees(ticksToAngle(m_PeriodicIO.positionTicks));
   }
 
   private boolean isAtTarget() {
     return m_PeriodicIO.controlState == CONTROL_STATE.MOTION_MAGIC
-        && ticksToAngle(Math.abs(m_PeriodicIO.position - m_PeriodicIO.targetPosition)) < 0.5;
+        && ticksToAngle(Math.abs(m_PeriodicIO.positionTicks - m_PeriodicIO.targetTicks)) < 0.5;
   }
 
   public int angleToTicks(double angle) {
-    return (int) (angle / 360.0 * m_gearRatio * 4096.0);
+    return (int) (angle * 4096.0 * m_gearRatio / 360.0);
   }
 
   public double ticksToAngle(double ticks) {
@@ -131,6 +143,10 @@ public class SRXPivot extends SubsystemBase {
     m_pivotMaster.set(0);
   }
 
+  public double getFeedForward() {
+    return Math.cos(ticksToAngle(m_PeriodicIO.positionTicks)) * .10;
+  }
+
   @Override
   public void initSendable(SendableBuilder builder) {
     super.initSendable(builder);
@@ -141,21 +157,22 @@ public class SRXPivot extends SubsystemBase {
     builder.addDoubleProperty("stator current: ", () -> m_pivotMaster.getStatorCurrent(),
         null);
     builder.addDoubleProperty("voltage: ", () -> m_pivotMaster.getMotorOutputVoltage(), null);
-    builder.addDoubleProperty("current ticks: ", () -> ticksToAngle(m_PeriodicIO.position),
+    builder.addDoubleProperty("current angle: ", () -> ticksToAngle(m_PeriodicIO.positionTicks),
         null);
-    builder.addDoubleProperty("target ticks: ", () -> ticksToAngle(m_PeriodicIO.targetPosition), null);
+
+    builder.addDoubleProperty("target angle: ", () -> ticksToAngle(m_PeriodicIO.targetTicks), null);
+    builder.addDoubleProperty("closed loop error", () -> m_pivotMaster.getClosedLoopError(), null);
   }
 
   /*
    * COMMANDS
    */
-  public Command defaultCmd() {
-    // hold last
-    return run(() -> stop());
+  public Command getHoldPositionCommand() {
+    return run(() -> setTargetDegrees(m_PeriodicIO.targetTicks));
   }
 
   public Command getGotoPositionCommand(POSITION pos) {
-    return runOnce(() -> goToPosition(pos));
+    return run(() -> setTargetDegrees(pos.degrees));
   }
 
   public Command getGotoAndWaitPositionCommand(POSITION pos) {
