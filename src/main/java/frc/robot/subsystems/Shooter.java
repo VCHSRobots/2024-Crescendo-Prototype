@@ -13,6 +13,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -21,10 +22,11 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ShooterConstants;
 
 public class Shooter extends SubsystemBase {
-  private final TalonFX m_shooterMasterMotor = new TalonFX(ShooterConstants.kShooterMasterMotorId.getDeviceNumber(),
-      ShooterConstants.kShooterMasterMotorId.getBus());
-  private final TalonFX m_shooterFollowerMotor = new TalonFX(ShooterConstants.kShooterFollowerMotorId.getDeviceNumber(),
-      ShooterConstants.kShooterFollowerMotorId.getBus());
+  private final TalonFX m_shooterMasterMotor = new TalonFX(ShooterConstants.kShooterTopMasterMotorId.getDeviceNumber(),
+      ShooterConstants.kShooterTopMasterMotorId.getBus());
+  private final TalonFX m_shooterFollowerMotor = new TalonFX(
+      ShooterConstants.kShooterBottomFollowerMotorId.getDeviceNumber(),
+      ShooterConstants.kShooterBottomFollowerMotorId.getBus());
 
   private final VoltageOut m_shooterVoltageOut = new VoltageOut(0);
   private final MotionMagicVelocityVoltage m_shooterVelocityMotionMagic = new MotionMagicVelocityVoltage(0);
@@ -35,17 +37,18 @@ public class Shooter extends SubsystemBase {
   public Shooter() {
     TalonFXConfiguration shooterMotorConfig = new TalonFXConfiguration();
     shooterMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    shooterMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    shooterMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
     shooterMotorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     shooterMotorConfig.CurrentLimits.SupplyCurrentThreshold = 40;
     shooterMotorConfig.CurrentLimits.SupplyCurrentLimit = 40;
     shooterMotorConfig.CurrentLimits.SupplyTimeThreshold = .00;
 
-    shooterMotorConfig.Feedback.SensorToMechanismRatio = 1; // TODO: gear ratio
+    shooterMotorConfig.Feedback.SensorToMechanismRatio = 1;
+    shooterMotorConfig.Feedback.RotorToSensorRatio = 1;
 
     // https://v6.docs.ctr-electronics.com/en/stable/docs/api-reference/device-specific/talonfx/motion-magic.html#using-motion-magic-velocity-in-api
-    var slot0Configs = shooterMotorConfig.Slot0;
+    var slot0Configs = shooterMotorConfig.Slot0; // TODO shoot pid ksva
     slot0Configs.kS = 0;
     slot0Configs.kV = 0;
     slot0Configs.kA = 0;
@@ -60,21 +63,17 @@ public class Shooter extends SubsystemBase {
     m_shooterMasterMotor.getConfigurator().apply(shooterMotorConfig);
     m_shooterFollowerMotor.getConfigurator().apply(shooterMotorConfig);
 
-    m_shooterFollowerMotor.setControl(new Follower(m_shooterMasterMotor.getDeviceID(), true)); // TODO: find
+    m_shooterFollowerMotor.setControl(new Follower(m_shooterMasterMotor.getDeviceID(), false)); // oppose = true
   }
 
-  public Command getSpeedUpToVelocityCommand(double velocity) {
-    return Commands.sequence(
-        runOnce(() -> setTargetVelocity(velocity)),
-        Commands.idle(this).until(this::isMotionMagicVelocityAtTarget));
-  }
-
-  public Command getShootCommand() {
-    return new RunCommand(() -> shoot(0.6), this).finallyDo(this::stop);
-  }
+  /*
+   * NORMAL FUNCTIONALITY
+   */
 
   public void shoot(double percentOut) {
-    m_shooterMasterMotor.setControl(m_shooterVoltageOut.withOutput(Math.max(12 * percentOut, 12)));
+    double maxVoltage = 12.0;
+    double voltage = MathUtil.clamp(maxVoltage * percentOut, -maxVoltage, maxVoltage);
+    m_shooterMasterMotor.setControl(m_shooterVoltageOut.withOutput(voltage));
   }
 
   public void stop() {
@@ -110,5 +109,22 @@ public class Shooter extends SubsystemBase {
         null);
     builder.addDoubleProperty("voltage: ", () -> m_shooterMasterMotor.getMotorVoltage().getValueAsDouble(), null);
     builder.addDoubleProperty("target velocity: ", () -> getTargetVelocity(), null);
+  }
+
+  /*
+   * COMMAND FACTORIES
+   */
+  public Command getSpeedUpUntilVelocityCommand(double velocity) {
+    return Commands.sequence(
+        getSpeedUpVelocityCommand(velocity),
+        Commands.idle(this).until(this::isMotionMagicVelocityAtTarget));
+  }
+
+  public Command getSpeedUpVelocityCommand(double velocity) {
+    return runOnce(() -> setTargetVelocity(velocity));
+  }
+
+  public Command getShootCommand() {
+    return new RunCommand(() -> shoot(0.6), this).finallyDo(this::stop);
   }
 }
