@@ -13,6 +13,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
@@ -45,7 +46,7 @@ public class Intake extends SubsystemBase {
   }
 
   public void intake() {
-    m_intakeMotor.setControl(m_intakeVoltageOut.withOutput(2));
+    m_intakeMotor.setControl(m_intakeVoltageOut.withOutput(1.3));
   }
 
   public void reverse() {
@@ -79,5 +80,12 @@ public class Intake extends SubsystemBase {
 
   public Command getReverseCommand() {
     return run(this::reverse).finallyDo(this::stop);
+  }
+
+  public Command getIntakeUntilPieceCommand() {
+    return new ConditionalCommand(
+        run(this::intake).until(() -> isPieceAtIntake()),
+        runOnce(this::stop),
+        () -> !isPieceAtIntake());
   }
 }
