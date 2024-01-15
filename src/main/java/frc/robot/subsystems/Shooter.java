@@ -33,6 +33,8 @@ public class Shooter extends SubsystemBase {
   private final StatusSignal<Double> m_shooterVelocity = m_shooterMasterMotor.getVelocity();
   private double motionMagicTargetVelocity = 0;
 
+  private double currVoltage = 0;
+
   /** Creates a new Shooter. */
   public Shooter() {
     TalonFXConfiguration shooterMotorConfig = new TalonFXConfiguration();
@@ -93,6 +95,22 @@ public class Shooter extends SubsystemBase {
     return motionMagicTargetVelocity;
   }
 
+  public void increaseVoltage(double inc) {
+    currVoltage = MathUtil.clamp(currVoltage + inc, 0, 12);
+  }
+
+  public void decreaseVoltage(double dec) {
+    currVoltage = MathUtil.clamp(currVoltage - dec, 0, 12);
+  }
+
+  public double getStoredVoltage() {
+    return currVoltage;
+  }
+
+  public void setToCurrVoltage() {
+    m_shooterMasterMotor.setControl(m_shooterVoltageOut.withOutput(currVoltage));
+  }
+
   @Override
   public void periodic() {
     m_shooterVelocity.refresh();
@@ -110,6 +128,7 @@ public class Shooter extends SubsystemBase {
         null);
     builder.addDoubleProperty("voltage: ", () -> m_shooterMasterMotor.getMotorVoltage().getValueAsDouble(), null);
     builder.addDoubleProperty("target velocity: ", () -> getTargetVelocity(), null);
+    builder.addDoubleProperty("curr stored voltage ", () -> getStoredVoltage(), null);
   }
 
   /*

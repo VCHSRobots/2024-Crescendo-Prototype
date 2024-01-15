@@ -77,22 +77,32 @@ public class RobotContainer {
 
     // right bumper lower pivot
     m_driverController.rightBumper()
-        .whileTrue(new RunCommand(() -> m_pivot.set(0.4), m_pivot).finallyDo(() -> m_pivot.setTargetDegreesToCurrentPosition()));
+        .whileTrue(new RunCommand(() -> m_pivot.set(0.4), m_pivot)
+            .finallyDo(() -> m_pivot.set(0)));
     // right bumper raise pivot
     m_driverController.leftBumper()
-        .whileTrue(new RunCommand(() -> m_pivot.set(-0.4), m_pivot).finallyDo(() -> m_pivot.setTargetDegreesToCurrentPosition()));
+        .whileTrue(new RunCommand(() -> m_pivot.set(-0.4), m_pivot)
+            .finallyDo(() -> m_pivot.set(0)));
 
     // right trigger intake speed
     m_driverController.rightTrigger(0.1)
-        .whileTrue(new RunCommand(() -> m_intake.set(m_driverController.getRightTriggerAxis()), m_intake));
+        .whileTrue(new RunCommand(() -> m_intake.set(m_driverController.getRightTriggerAxis() * 0.25), m_intake));
     // left trigger reverse speed
     m_driverController.leftTrigger(0.1)
-        .whileTrue(new RunCommand(() -> m_intake.set(-m_driverController.getLeftTriggerAxis()), m_intake));
+        .whileTrue(new RunCommand(() -> m_intake.set(-m_driverController.getLeftTriggerAxis() * 0.25), m_intake));
 
     m_driverController.a().whileTrue(m_pivot.getGotoPositionCommand(POSITION.HOME));
-    m_driverController.b().whileTrue(m_pivot.getGotoPositionCommand(POSITION.AMP));
-    m_driverController.x().whileTrue(m_pivot.getGotoPositionCommand(POSITION.SOURCE));
-    m_driverController.y().whileTrue(m_pivot.getGotoPositionCommand(POSITION.SPEAKER));
+    m_driverController.b().whileTrue(m_pivot.getGotoPositionCommand(POSITION.SPEAKER));
+    m_driverController.x().whileTrue(m_pivot.getGotoPositionCommand(POSITION.AMP));
+    // m_driverController.y().whileTrue(m_pivot.getGotoPositionCommand(POSITION.SOURCE));
+
+    // increase shooter speed
+    m_driverController.pov(0).onTrue(new InstantCommand(() -> m_shooter.increaseVoltage(.5)));
+    // increase shooter speed
+    m_driverController.pov(180).onTrue(new InstantCommand(() -> m_shooter.decreaseVoltage(.5)));
+    // on/off shooter
+    m_driverController.pov(90)
+        .toggleOnTrue(new RunCommand(() -> m_shooter.setToCurrVoltage(), m_shooter));
 
     // zero
     m_driverController.back().onTrue(new InstantCommand(() -> m_pivot.zero(), m_pivot));
