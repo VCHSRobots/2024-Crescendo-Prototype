@@ -9,6 +9,7 @@ import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Pivot;
 import frc.robot.subsystems.SRXPivot;
 import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.SRXPivot.POSITION;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -71,8 +72,7 @@ public class RobotContainer {
     }, m_shooter));
 
     m_intake.setDefaultCommand(Commands.run(() -> m_intake.stop(), m_intake));
-    m_pivot.setDefaultCommand(Commands.run(()->m_pivot.stop(), m_pivot));
-
+    m_pivot.setDefaultCommand(m_pivot.defaultCmd());
     // right bumper lower pivot
     m_driverController.rightBumper()
         .whileTrue(new RunCommand(() -> m_pivot.set(0.3), m_pivot).finallyDo(() -> m_pivot.set(0)));
@@ -86,6 +86,11 @@ public class RobotContainer {
     // left trigger reverse speed
     m_driverController.leftTrigger(0.1)
         .whileTrue(new RunCommand(() -> m_intake.set(-m_driverController.getLeftTriggerAxis()), m_intake));
+
+    m_driverController.a().whileTrue(m_pivot.getGotoPositionCommand(POSITION.HOME));
+    m_driverController.b().whileTrue(m_pivot.getGotoPositionCommand(POSITION.AMP));
+    m_driverController.x().whileTrue(m_pivot.getGotoPositionCommand(POSITION.SOURCE));
+    m_driverController.y().whileTrue(m_pivot.getGotoPositionCommand(POSITION.SPEAKER));
   }
 
   /**
