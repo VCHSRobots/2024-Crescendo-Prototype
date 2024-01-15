@@ -64,6 +64,8 @@ public class RobotContainer {
       }
     }, m_shooter));
 
+    m_intake.setDefaultCommand(Commands.run(()->m_intake.stop(), m_intake));
+
     // right bumper lower pivot
     m_driverController.rightBumper()
         .whileTrue(new RunCommand(() -> m_pivot.set(0.3), m_pivot).finallyDo(() -> m_pivot.set(0)));
@@ -72,10 +74,10 @@ public class RobotContainer {
         .whileTrue(new RunCommand(() -> m_pivot.set(-0.3), m_pivot).finallyDo(() -> m_pivot.set(0)));
 
     // right trigger intake speed
-    m_driverController.rightTrigger(0.2)
+    m_driverController.rightTrigger(0.1)
         .whileTrue(new RunCommand(() -> m_intake.set(m_driverController.getRightTriggerAxis()), m_intake));
     // left trigger reverse speed
-    m_driverController.leftTrigger(0.2)
+    m_driverController.leftTrigger(0.1)
         .whileTrue(new RunCommand(() -> m_intake.set(-m_driverController.getLeftTriggerAxis()), m_intake));
   }
 
