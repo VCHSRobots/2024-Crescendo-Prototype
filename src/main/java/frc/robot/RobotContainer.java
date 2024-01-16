@@ -72,7 +72,6 @@ public class RobotContainer {
       OperatorConstants.kDriverControllerPort);
   private final CommandXboxController m_operatorController = new CommandXboxController(1); // operator xbox controller
   private final CommandXboxController m_testController = new CommandXboxController(2);
-  private final CommandXboxController m_climberTestingController = new CommandXboxController(3);
 
   CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain; // drivetrain
 
@@ -201,7 +200,7 @@ public class RobotContainer {
         .toggleOnTrue(new RunCommand(() -> m_shooter.setToCurrVoltage(), m_shooter).finallyDo(() -> m_shooter.stop()));
 
     // zero
-    m_driverController.back().onTrue(new InstantCommand(() -> m_pivot.zero(), m_pivot));
+    m_driverController.back().onTrue(new InstantCommand(() -> m_pivot.zero(), m_pivot).ignoringDisable(true));
     newSpeed();
 
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
@@ -246,14 +245,14 @@ public class RobotContainer {
 
     // climber testing controller
     m_climber.setDefaultCommand(new RunCommand(() -> {
-      double leftY = m_climberTestingController.getLeftY();
+      double leftY = -m_operatorController.getLeftY();
       if (Math.abs(leftY) > 0.03) {
         m_climber.setLeftWinch(leftY);
       } else {
         m_climber.setLeftWinch(0);
       }
 
-      double rightY = m_climberTestingController.getRightY();
+      double rightY = -m_operatorController.getRightY();
       if (Math.abs(rightY) > 0.03) {
         m_climber.setRightWinch(rightY);
       } else {

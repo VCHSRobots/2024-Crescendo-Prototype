@@ -39,8 +39,8 @@ public final class Constants {
   }
 
   public static class ClimberConstants {
-    public static int kLeftWinchMotorId = 7;
-    public static int kRightWinchMotorId = 8;
+    public static int kLeftWinchMotorId = 6;
+    public static int kRightWinchMotorId = 5;
   }
 
   public static String kCanivoreBus = "canivore";
