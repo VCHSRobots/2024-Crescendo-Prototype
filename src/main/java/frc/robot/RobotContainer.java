@@ -5,6 +5,7 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Pivot;
 import frc.robot.subsystems.SRXPivot;
@@ -53,6 +54,7 @@ public class RobotContainer {
   private final Intake m_intake = new Intake();
   private final Shooter m_shooter = new Shooter();
   private final SRXPivot m_pivot = new SRXPivot();
+  private final Climber m_climber = new Climber();
 
   private SendableChooser<Command> autoChooser;
   private SendableChooser<String> controlChooser = new SendableChooser<>();
@@ -65,10 +67,12 @@ public class RobotContainer {
                                                           // max turning rate speed.
   private double AngularRate = MaxAngularRate; // This will be updated when turtle and reset to MaxAngularRate
 
+  // joysticks
   private final CommandXboxController m_driverController = new CommandXboxController(
       OperatorConstants.kDriverControllerPort);
   private final CommandXboxController m_operatorController = new CommandXboxController(1); // operator xbox controller
   private final CommandXboxController m_testController = new CommandXboxController(2);
+  private final CommandXboxController m_climberTestingController = new CommandXboxController(3);
 
   CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain; // drivetrain
 
@@ -240,6 +244,22 @@ public class RobotContainer {
     m_testController.y()
         .whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(Rotation2d.fromDegrees(90))));
 
+    // climber testing controller
+    m_climber.setDefaultCommand(new RunCommand(() -> {
+      double leftY = m_climberTestingController.getLeftY();
+      if (Math.abs(leftY) > 0.03) {
+        m_climber.setLeftWinch(leftY);
+      } else {
+        m_climber.setLeftWinch(0);
+      }
+
+      double rightY = m_climberTestingController.getRightY();
+      if (Math.abs(rightY) > 0.03) {
+        m_climber.setRightWinch(rightY);
+      } else {
+        m_climber.setRightWinch(0);
+      }
+    }, m_climber));
   }
 
   /**
