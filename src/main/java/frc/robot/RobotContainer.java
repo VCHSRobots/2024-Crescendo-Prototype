@@ -21,6 +21,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -96,11 +97,11 @@ public class RobotContainer {
 
   Pose2d odomStart = new Pose2d(0, 0, new Rotation2d(0, 0));
 
-  private Supplier<SwerveRequest> controlStyle = () -> drive.withVelocityX(-m_driverController.getLeftY() * MaxSpeed) // Drive
+  private Supplier<SwerveRequest> controlStyle = () -> drive.withVelocityX(-MathUtil.applyDeadband(m_driverController.getLeftY(),0.08) * MaxSpeed) // Drive
                                                                                                                       // forward
                                                                                                                       // -Y
-      .withVelocityY(-m_driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-      .withRotationalRate(-m_driverController.getRightX() * AngularRate); // Drive counterclockwise with negative X
+      .withVelocityY(-MathUtil.applyDeadband(m_driverController.getLeftX(),0.08) * MaxSpeed) // Drive left with negative X (left)
+      .withRotationalRate(-MathUtil.applyDeadband(m_driverController.getRightX(),0.08) * AngularRate); // Drive counterclockwise with negative X
                                                                           // (left);
 
   private Double lastSpeed = 0.65;
