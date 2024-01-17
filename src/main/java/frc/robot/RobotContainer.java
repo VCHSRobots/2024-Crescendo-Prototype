@@ -97,12 +97,13 @@ public class RobotContainer {
 
   Pose2d odomStart = new Pose2d(0, 0, new Rotation2d(0, 0));
 
-  private Supplier<SwerveRequest> controlStyle = () -> drive.withVelocityX(-MathUtil.applyDeadband(m_driverController.getLeftY(),0.08) * MaxSpeed) // Drive
-                                                                                                                      // forward
-                                                                                                                      // -Y
-      .withVelocityY(-MathUtil.applyDeadband(m_driverController.getLeftX(),0.08) * MaxSpeed) // Drive left with negative X (left)
-      .withRotationalRate(-MathUtil.applyDeadband(m_driverController.getRightX(),0.08) * AngularRate); // Drive counterclockwise with negative X
-                                                                          // (left);
+  private Supplier<SwerveRequest> controlStyle = () -> drive
+      .withVelocityX(-MathUtil.applyDeadband(m_driverController.getLeftY(), 0.1) * MaxSpeed)
+      // Drive forward -Y
+      .withVelocityY(-MathUtil.applyDeadband(m_driverController.getLeftX(), 0.1) * MaxSpeed)
+      // Drive left with negative X (left)
+      .withRotationalRate(-MathUtil.applyDeadband(m_driverController.getRightX(), 0.1) * AngularRate);
+  // Drive counterclockwise with negative X (left);
 
   private Double lastSpeed = 0.65;
 
@@ -160,12 +161,12 @@ public class RobotContainer {
   private void configureBindings() {
     // left y shooter speed
     // m_shooter.setDefaultCommand(new RunCommand(() -> {
-    //   double leftY = m_driverController.getLeftY();
-    //   if (Math.abs(leftY) > 0.04) {
-    //     m_shooter.shoot(m_driverController.getLeftY());
-    //   } else {
-    //     m_shooter.shoot(0);
-    //   }
+    // double leftY = m_driverController.getLeftY();
+    // if (Math.abs(leftY) > 0.04) {
+    // m_shooter.shoot(m_driverController.getLeftY());
+    // } else {
+    // m_shooter.shoot(0);
+    // }
     // }, m_shooter));
 
     m_intake.setDefaultCommand(Commands.run(() -> m_intake.stop(), m_intake));
@@ -213,27 +214,26 @@ public class RobotContainer {
     drivetrain.registerTelemetry(logger::telemeterize);
 
     m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
-    m_driverController.pov(270).whileTrue(drivetrain.applyRequest(()-> {
+    m_driverController.pov(270).whileTrue(drivetrain.applyRequest(() -> {
       double x = 0;
       double y = 0;
       double r = 0;
       double maxSpeed = 2.0;
       var tag = vision.getTagPoseRobotSpace();
-      Pose2d goal = new Pose2d(new Translation2d(1.5, 0), new Rotation2d()); //TODO check whether 180
+      Pose2d goal = new Pose2d(new Translation2d(1.5, 0), new Rotation2d()); // TODO check whether 180
 
-      x = (tag.getZ()-goal.getX())* 0.5;
-      x = Math.copySign(Math.min(Math.abs(x), maxSpeed),x);
+      x = (tag.getZ() - goal.getX()) * 0.5;
+      x = Math.copySign(Math.min(Math.abs(x), maxSpeed), x);
 
-      y = (tag.getX()-goal.getY())* 0.5;
-      y = -Math.copySign(Math.min(Math.abs(y), maxSpeed),y);
+      y = (tag.getX() - goal.getY()) * 0.5;
+      y = -Math.copySign(Math.min(Math.abs(y), maxSpeed), y);
 
-      r = (Units.radiansToDegrees(tag.getRotation().getY())-goal.getRotation().getDegrees());
-      r = -Math.copySign(Math.min(Math.abs(r), 270),r);
+      r = (Units.radiansToDegrees(tag.getRotation().getY()) - goal.getRotation().getDegrees());
+      r = -Math.copySign(Math.min(Math.abs(r), 270), r);
 
-
-      return forwardStraight.withDeadband(.05).withVelocityX(x).withVelocityY(y).withRotationalRate(Units.degreesToRadians(r));
-    }
-      ));
+      return forwardStraight.withDeadband(.05).withVelocityX(x).withVelocityY(y)
+          .withRotationalRate(Units.degreesToRadians(r));
+    }));
 
     // testing controller
     m_testController.a().whileTrue(drivetrain.applyRequest(() -> brake));
