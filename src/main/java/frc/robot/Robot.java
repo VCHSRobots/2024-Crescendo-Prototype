@@ -86,7 +86,7 @@ public class Robot extends TimedRobot {
       m_autonomousCommand.cancel();
     }
 
-    m_robotContainer.setPivotTargetToCurrentPosition();
+    m_robotContainer.setPivotStop();
   }
 
   /** This function is called periodically during operator control. */

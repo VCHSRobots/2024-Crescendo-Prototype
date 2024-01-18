@@ -46,7 +46,7 @@ public class Intake extends SubsystemBase {
   }
 
   public void intake() {
-    m_intakeMotor.setControl(m_intakeVoltageOut.withOutput(1.3));
+    m_intakeMotor.setControl(m_intakeVoltageOut.withOutput(2));
   }
 
   public void reverse() {

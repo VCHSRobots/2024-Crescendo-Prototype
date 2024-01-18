@@ -171,7 +171,7 @@ public class RobotContainer {
 
     m_intake.setDefaultCommand(Commands.run(() -> m_intake.stop(), m_intake));
     // m_pivot.setDefaultCommand(m_pivot.getHoldPositionCommand());
-
+    
     // right bumper lower pivot
     m_driverController.rightBumper()
         .whileTrue(new RunCommand(() -> m_pivot.set(0.3), m_pivot)
@@ -183,7 +183,7 @@ public class RobotContainer {
 
     // right trigger intake speed
     m_driverController.rightTrigger(0.1)
-        .whileTrue(new RunCommand(() -> m_intake.set(m_driverController.getRightTriggerAxis() * 0.25), m_intake));
+        .whileTrue(new RunCommand(() -> m_intake.set(m_driverController.getRightTriggerAxis() * 0.75), m_intake));
     // left trigger reverse speed
     m_driverController.leftTrigger(0.1)
         .whileTrue(m_intake.getIntakeUntilPieceCommand());
@@ -280,5 +280,8 @@ public class RobotContainer {
 
   public void setPivotTargetToCurrentPosition() {
     m_pivot.setTargetDegreesToCurrentPosition();
+  }
+  public void setPivotStop() {
+    m_pivot.stop();
   }
 }
