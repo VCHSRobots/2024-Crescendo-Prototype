@@ -34,7 +34,7 @@ public class TunerConstants {
 
         // The stator current at which the wheels start to slip;
         // This needs to be tuned to your individual robot
-        private static final double kSlipCurrentA = 120.0;
+        private static final double kSlipCurrentA = 400.0;
 
         // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
         // This may need to be tuned to your individual robot
@@ -94,7 +94,7 @@ public class TunerConstants {
         private static final int kFrontRightDriveMotorId = 17;
         private static final int kFrontRightSteerMotorId = 18;
         private static final int kFrontRightEncoderId = 22;
-        private static final double kFrontRightEncoderOffset = -0.341309;// -0.361328;
+        private static final double kFrontRightEncoderOffset = -0.169189;//  -0.341309;// -0.361328;
                                                                          // //-0.340576;//-0.347656;//-0.35888671875;
 
         private static final double kFrontRightXPosInches = 10.375;

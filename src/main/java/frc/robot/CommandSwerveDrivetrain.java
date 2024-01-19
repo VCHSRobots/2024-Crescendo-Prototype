@@ -10,6 +10,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -111,10 +112,9 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     private SwerveVoltageRequest driveVoltageRequest = new SwerveVoltageRequest(true);
 
     private SysIdRoutine m_driveSysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(Volts.of(0.5).per(Seconds.of(1)), Volts.of(10), null,
-                    ModifiedSignalLogger.logState()),
+            new SysIdRoutine.Config(Volts.of(0.5).per(Seconds.of(1)), Volts.of(5), null, ModifiedSignalLogger.logState()),
             new SysIdRoutine.Mechanism(
-                    (Measure<Voltage> volts) -> setControl(driveVoltageRequest.withVoltage(volts.in(Volts))),
+                    (Measure<Voltage> volts) -> {setControl(driveVoltageRequest.withVoltage(volts.in(Volts))); System.out.println("testing\n");},
                     null,
                     this));
 
