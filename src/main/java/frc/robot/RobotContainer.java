@@ -111,7 +111,7 @@ public class RobotContainer {
 
     // Build an auto chooser. This will use Commands.none() as the default option.
     autoChooser = AutoBuilder.buildAutoChooser();
-
+    
     controlChooser.setDefaultOption("2 Joysticks", "2 Joysticks");
     controlChooser.addOption("1 Joystick Rotation Triggers", "1 Joystick Rotation Triggers");
     controlChooser.addOption("Split Joysticks Rotation Triggers", "Split Joysticks Rotation Triggers");

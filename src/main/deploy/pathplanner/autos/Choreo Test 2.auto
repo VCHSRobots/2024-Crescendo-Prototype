@@ -1,0 +1,49 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 1.0611588954925537,
+      "y": 2.2574305534362793
+    },
+    "rotation": -2.3377959040046708e-27
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Goofy Path.1"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeOut"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Goofy Path.2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shootClose"
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": true
+}
