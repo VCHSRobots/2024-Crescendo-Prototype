@@ -111,7 +111,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     private SwerveVoltageRequest driveVoltageRequest = new SwerveVoltageRequest(true);
 
     private SysIdRoutine m_driveSysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(Volts.of(0.2).per(Seconds.of(1)), Volts.of(10), null,
+            new SysIdRoutine.Config(Volts.of(0.5).per(Seconds.of(1)), Volts.of(10), null,
                     ModifiedSignalLogger.logState()),
             new SysIdRoutine.Mechanism(
                     (Measure<Voltage> volts) -> setControl(driveVoltageRequest.withVoltage(volts.in(Volts))),
@@ -121,14 +121,14 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     private SwerveVoltageRequest steerVoltageRequest = new SwerveVoltageRequest(false);
 
     private SysIdRoutine m_steerSysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(Volts.of(0.1).per(Seconds.of(1)), Volts.of(5), null, ModifiedSignalLogger.logState()),
+            new SysIdRoutine.Config(Volts.of(0.5).per(Seconds.of(1)), Volts.of(5), null, ModifiedSignalLogger.logState()),
             new SysIdRoutine.Mechanism(
                     (Measure<Voltage> volts) -> setControl(steerVoltageRequest.withVoltage(volts.in(Volts))),
                     null,
                     this));
 
     private SysIdRoutine m_slipSysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(Volts.of(0.25).per(Seconds.of(1)), null, null, ModifiedSignalLogger.logState()),
+            new SysIdRoutine.Config(Volts.of(0.5).per(Seconds.of(1)), null, null, ModifiedSignalLogger.logState()),
             new SysIdRoutine.Mechanism(
                     (Measure<Voltage> volts) -> setControl(driveVoltageRequest.withVoltage(volts.in(Volts))),
                     null,
