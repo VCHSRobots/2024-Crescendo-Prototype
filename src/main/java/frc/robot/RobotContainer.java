@@ -55,7 +55,6 @@ public class RobotContainer {
   private final SRXPivot m_pivot = new SRXPivot();
 
   private SendableChooser<Command> autoChooser;
-  private SendableChooser<String> controlChooser = new SendableChooser<>();
   private SendableChooser<Double> speedChooser = new SendableChooser<>();
   private double MaxSpeed = TunerConstants.kSpeedAt12VoltsMps; // Initial max is true top speed
   private final double TurtleSpeed = 0.1; // Reduction in speed from Max Speed, 0.1 = 10%
@@ -75,8 +74,8 @@ public class RobotContainer {
   // Field-centric driving in Open Loop, can change to closed loop after
   // characterization
   SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-      .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withDeadband(MaxSpeed * 0.02)
-      .withRotationalDeadband(AngularRate * 0.02);
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withDeadband(MaxSpeed * 0.01)
+      .withRotationalDeadband(AngularRate * 0.01);
   // Field-centric driving in Closed Loop. Comment above and uncomment below.
   // SwerveRequest.FieldCentric drive = new
   // SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.Velocity).withDecoadband(MaxSpeed
@@ -93,13 +92,12 @@ public class RobotContainer {
 
   Pose2d odomStart = new Pose2d(0, 0, new Rotation2d(0, 0));
 
-  private Supplier<SwerveRequest> controlStyle = () -> drive.withVelocityX(-m_driverController.getLeftY() * MaxSpeed) // Drive
-                                                                                                                      // forward
-                                                                                                                      // -Y
-      .withVelocityY(-m_driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-      .withRotationalRate(-m_driverController.getRightX() * AngularRate); // Drive counterclockwise with negative X
-                                                                          // (left);
-
+  private Supplier<SwerveRequest> controlStyle = () -> {
+    return drive.withVelocityX(-m_driverController.getLeftY() * MaxSpeed) // Drive forward -Y
+        .withVelocityY(-m_driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+        .withRotationalRate(-m_driverController.getRightX() * AngularRate); // Drive counterclockwise with negative X
+                                                                            // (left);
+  };
   private Double lastSpeed = 0.65;
 
   /**
@@ -111,12 +109,8 @@ public class RobotContainer {
 
     // Build an auto chooser. This will use Commands.none() as the default option.
     autoChooser = AutoBuilder.buildAutoChooser();
-    
-    controlChooser.setDefaultOption("2 Joysticks", "2 Joysticks");
-    controlChooser.addOption("1 Joystick Rotation Triggers", "1 Joystick Rotation Triggers");
-    controlChooser.addOption("Split Joysticks Rotation Triggers", "Split Joysticks Rotation Triggers");
-    controlChooser.addOption("2 Joysticks with Gas Pedal", "2 Joysticks with Gas Pedal");
-    SmartDashboard.putData("Control Chooser", controlChooser);
+    SmartDashboard.putData("Auto Chooser", autoChooser);
+
     speedChooser.addOption("100%", 1.0);
     speedChooser.addOption("95%", 0.95);
     speedChooser.addOption("90%", 0.9);
@@ -131,7 +125,7 @@ public class RobotContainer {
     speedChooser.addOption("35%", 0.35);
     SmartDashboard.putData("Speed Limit", speedChooser);
 
-    SmartDashboard.putData("Auto Chooser", autoChooser);
+    
     // Configure the trigger bindings
     configureBindings();
     Shuffleboard.getTab("ss").add("intake", m_intake);
@@ -156,17 +150,17 @@ public class RobotContainer {
   private void configureBindings() {
     // left y shooter speed
     // m_shooter.setDefaultCommand(new RunCommand(() -> {
-    //   double leftY = m_driverController.getLeftY();
-    //   if (Math.abs(leftY) > 0.04) {
-    //     m_shooter.shoot(m_driverController.getLeftY());
-    //   } else {
-    //     m_shooter.shoot(0);
-    //   }
+    // double leftY = m_driverController.getLeftY();
+    // if (Math.abs(leftY) > 0.04) {
+    // m_shooter.shoot(m_driverController.getLeftY());
+    // } else {
+    // m_shooter.shoot(0);
+    // }
     // }, m_shooter));
 
     m_intake.setDefaultCommand(Commands.run(() -> m_intake.stop(), m_intake));
     // m_pivot.setDefaultCommand(m_pivot.getHoldPositionCommand());
-    
+
     // right bumper lower pivot
     m_driverController.rightBumper()
         .whileTrue(new RunCommand(() -> m_pivot.set(0.3), m_pivot)
@@ -209,27 +203,26 @@ public class RobotContainer {
     drivetrain.registerTelemetry(logger::telemeterize);
 
     m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
-    m_driverController.pov(270).whileTrue(drivetrain.applyRequest(()-> {
+    m_driverController.pov(270).whileTrue(drivetrain.applyRequest(() -> {
       double x = 0;
       double y = 0;
       double r = 0;
       double maxSpeed = 2.0;
       var tag = vision.getTagPoseRobotSpace();
-      Pose2d goal = new Pose2d(new Translation2d(1.5, 0), new Rotation2d()); //TODO check whether 180
+      Pose2d goal = new Pose2d(new Translation2d(1.5, 0), new Rotation2d()); // TODO check whether 180
 
-      x = (tag.getZ()-goal.getX())* 0.5;
-      x = Math.copySign(Math.min(Math.abs(x), maxSpeed),x);
+      x = (tag.getZ() - goal.getX()) * 0.5;
+      x = Math.copySign(Math.min(Math.abs(x), maxSpeed), x);
 
-      y = (tag.getX()-goal.getY())* 0.5;
-      y = -Math.copySign(Math.min(Math.abs(y), maxSpeed),y);
+      y = (tag.getX() - goal.getY()) * 0.5;
+      y = -Math.copySign(Math.min(Math.abs(y), maxSpeed), y);
 
-      r = (Units.radiansToDegrees(tag.getRotation().getY())-goal.getRotation().getDegrees());
-      r = -Math.copySign(Math.min(Math.abs(r), 270),r);
+      r = (Units.radiansToDegrees(tag.getRotation().getY()) - goal.getRotation().getDegrees());
+      r = -Math.copySign(Math.min(Math.abs(r), 270), r);
 
-
-      return forwardStraight.withDeadband(.05).withVelocityX(x).withVelocityY(y).withRotationalRate(Units.degreesToRadians(r));
-    }
-      ));
+      return forwardStraight.withDeadband(.05).withVelocityX(x).withVelocityY(y)
+          .withRotationalRate(Units.degreesToRadians(r));
+    }));
 
     // testing controller
     m_testController.a().whileTrue(drivetrain.applyRequest(() -> brake));
@@ -261,6 +254,7 @@ public class RobotContainer {
   public void setPivotTargetToCurrentPosition() {
     m_pivot.setTargetDegreesToCurrentPosition();
   }
+
   public void setPivotStop() {
     m_pivot.stop();
   }
