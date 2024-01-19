@@ -37,7 +37,7 @@ public class SwerveVoltageRequest implements SwerveRequest {
                 module.getSteerMotor().setControl(m_voltageOutControl.withOutput(m_targetVoltage));
 
                 // Command drive motor to zero
-                module.getDriveMotor().setControl(m_motionMagicControl);
+                module.getDriveMotor().setControl(m_voltageOutControl.withOutput(0));
             }
         }
 

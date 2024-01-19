@@ -38,9 +38,9 @@ public class Limelight extends SubsystemBase {
   @Override
   public void periodic() {
 
-    SmartDashboard.putNumber("targetPose x", getTagPoseRobotSpace().getX());
-    SmartDashboard.putNumber("targetPose z", getTagPoseRobotSpace().getZ());
-    SmartDashboard.putNumber("targetPose r", getTagPoseRobotSpace().getRotation().getY());
+    // SmartDashboard.putNumber("targetPose x", getTagPoseRobotSpace().getX());
+    // SmartDashboard.putNumber("targetPose z", getTagPoseRobotSpace().getZ());
+    // SmartDashboard.putNumber("targetPose r", getTagPoseRobotSpace().getRotation().getY());
 
     if (enable) {
       Double targetDistance = LimelightHelpers.getTargetPose3d_CameraSpace(ll).getTranslation().getDistance(new Translation3d());

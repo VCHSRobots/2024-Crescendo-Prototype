@@ -121,7 +121,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     private SwerveVoltageRequest steerVoltageRequest = new SwerveVoltageRequest(false);
 
     private SysIdRoutine m_steerSysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(Volts.of(0.1).per(Seconds.of(1)), null, null, ModifiedSignalLogger.logState()),
+            new SysIdRoutine.Config(Volts.of(0.1).per(Seconds.of(1)), Volts.of(5), null, ModifiedSignalLogger.logState()),
             new SysIdRoutine.Mechanism(
                     (Measure<Voltage> volts) -> setControl(steerVoltageRequest.withVoltage(volts.in(Volts))),
                     null,
