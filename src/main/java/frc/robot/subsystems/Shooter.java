@@ -113,7 +113,7 @@ public class Shooter extends SubsystemBase {
 
   @Override
   public void periodic() {
-    m_shooterVelocity.refresh();
+    m_shooterVelocity.refresh(); // refresh signal to get more recent values
   }
 
   @Override
@@ -146,5 +146,13 @@ public class Shooter extends SubsystemBase {
 
   public Command getShootCommand() {
     return new RunCommand(() -> shoot(0.6), this).finallyDo(this::stop);
+  }
+
+  public Command getShootCloseCommand() {
+    return new RunCommand(() -> shoot(0.5), this).finallyDo(this::stop);
+  }
+
+  public Command getShootMidCommand() {
+    return new RunCommand(() -> shoot(0.7), this).finallyDo(this::stop);
   }
 }

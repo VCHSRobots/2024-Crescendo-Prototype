@@ -49,6 +49,10 @@ public class Intake extends SubsystemBase {
     m_intakeMotor.setControl(m_intakeVoltageOut.withOutput(2));
   }
 
+  public void feedShoot() {
+    m_intakeMotor.setControl(m_intakeVoltageOut.withOutput(8));
+  }
+
   public void reverse() {
     m_intakeMotor.setControl(m_intakeVoltageOut.withOutput(-2));
   }
@@ -80,6 +84,14 @@ public class Intake extends SubsystemBase {
 
   public Command getReverseCommand() {
     return run(this::reverse).finallyDo(this::stop);
+  }
+
+  public Command getFeedShooterCommand() {
+    return run(this::feedShoot).finallyDo(this::stop);
+  }
+
+  public Command getStopCommand() {
+    return runOnce(this::stop);
   }
 
   public Command getIntakeUntilPieceCommand() {

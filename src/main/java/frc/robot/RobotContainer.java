@@ -19,6 +19,7 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -107,6 +108,15 @@ public class RobotContainer {
     // Detect if controllers are missing / Stop multiple warnings
     DriverStation.silenceJoystickConnectionWarning(true);
 
+    NamedCommands.registerCommand("intakePiece", m_intake.getIntakeUntilPieceCommand());
+    NamedCommands.registerCommand("shootClose",
+        Commands.sequence(m_shooter.getShootCloseCommand(), Commands.waitSeconds(1), m_intake.getFeedShooterCommand()));
+    NamedCommands.registerCommand("shootMid",
+        Commands.sequence(m_shooter.getShootMidCommand(), Commands.waitSeconds(1), m_intake.getFeedShooterCommand()));
+    NamedCommands.registerCommand("pivotIntake", Commands.none());
+    NamedCommands.registerCommand("pivotShootClose", Commands.none());
+    NamedCommands.registerCommand("pivotShootMid", Commands.none());
+
     // Build an auto chooser. This will use Commands.none() as the default option.
     autoChooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -125,7 +135,6 @@ public class RobotContainer {
     speedChooser.addOption("35%", 0.35);
     SmartDashboard.putData("Speed Limit", speedChooser);
 
-    
     // Configure the trigger bindings
     configureBindings();
     Shuffleboard.getTab("ss").add("intake", m_intake);
