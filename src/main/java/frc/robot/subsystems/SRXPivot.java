@@ -50,6 +50,7 @@ public class SRXPivot extends SubsystemBase {
     public CONTROL_STATE controlState = CONTROL_STATE.OPEN_LOOP;
     public double targetTicks = 0;
     public double positionTicks = 0;
+    public int atSetpointCount = 0;
   }
 
   private PeriodicIO m_PeriodicIO = new PeriodicIO();
@@ -100,6 +101,14 @@ public class SRXPivot extends SubsystemBase {
     // read sensors
     m_PeriodicIO.positionTicks = m_pivotMaster.getSelectedSensorPosition();
 
+    if (isAtTarget()) {
+      if (m_PeriodicIO.atSetpointCount < 100) {
+        m_PeriodicIO.atSetpointCount += 1;
+      }
+    } else {
+      m_PeriodicIO.atSetpointCount = 0;
+    }
+
   }
 
   public void zero() {
@@ -121,7 +130,8 @@ public class SRXPivot extends SubsystemBase {
 
   private boolean isAtTarget() {
     return m_PeriodicIO.controlState == CONTROL_STATE.MOTION_MAGIC
-        && ticksToAngle(Math.abs(m_PeriodicIO.positionTicks - m_PeriodicIO.targetTicks)) < 0.5;
+        && ticksToAngle(Math.abs(m_PeriodicIO.positionTicks - m_PeriodicIO.targetTicks)) < 0.5
+        && m_PeriodicIO.atSetpointCount > 5;
   }
 
   public int angleToTicks(double angle) {
@@ -153,17 +163,19 @@ public class SRXPivot extends SubsystemBase {
   @Override
   public void initSendable(SendableBuilder builder) {
     super.initSendable(builder);
-    builder.addDoubleProperty("velocity output: ", () -> m_pivotMaster.getSelectedSensorVelocity(),
+    builder.addDoubleProperty("velocity output", () -> m_pivotMaster.getSelectedSensorVelocity(),
         null);
-    builder.addDoubleProperty("supply current: ", () -> m_pivotMaster.getSupplyCurrent(),
+    builder.addDoubleProperty("supply current", () -> m_pivotMaster.getSupplyCurrent(),
         null);
-    builder.addDoubleProperty("stator current: ", () -> m_pivotMaster.getStatorCurrent(),
+    builder.addDoubleProperty("stator current", () -> m_pivotMaster.getStatorCurrent(),
         null);
-    builder.addDoubleProperty("voltage: ", () -> m_pivotMaster.getMotorOutputVoltage(), null);
-    builder.addDoubleProperty("current angle: ", () -> ticksToAngle(m_PeriodicIO.positionTicks),
+    builder.addDoubleProperty("voltage", () -> m_pivotMaster.getMotorOutputVoltage(), null);
+    builder.addDoubleProperty("current angle", () -> ticksToAngle(m_PeriodicIO.positionTicks),
         null);
+    builder.addStringProperty("control mode", () -> m_PeriodicIO.controlState.name(), null);
+    builder.addDoubleProperty("times at setpoint", () -> m_PeriodicIO.atSetpointCount, null);
 
-    builder.addDoubleProperty("target angle: ", () -> ticksToAngle(m_PeriodicIO.targetTicks), null);
+    builder.addDoubleProperty("target angle", () -> ticksToAngle(m_PeriodicIO.targetTicks), null);
     builder.addDoubleProperty("closed loop error", () -> m_pivotMaster.getClosedLoopError(), null);
     builder.addBooleanProperty("is at target", () -> isAtTarget(), null);
   }
@@ -180,6 +192,6 @@ public class SRXPivot extends SubsystemBase {
   }
 
   public Command getGotoPositionUntilTargetCommand(POSITION pos) {
-    return getGotoPositionCommand(pos).until(this::isAtTarget);
+    return getGotoPositionCommand(pos).raceWith(Commands.waitSeconds(0.05), Commands.waitUntil(this::isAtTarget));
   }
 }

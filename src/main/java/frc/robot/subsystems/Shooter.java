@@ -120,15 +120,15 @@ public class Shooter extends SubsystemBase {
   public void initSendable(SendableBuilder builder) {
     setName("Shooter");
     super.initSendable(builder);
-    builder.addDoubleProperty("velocity output (Rot/s): ", () -> m_shooterVelocity.getValueAsDouble(),
+    builder.addDoubleProperty("velocity output (Rot/s)", () -> m_shooterVelocity.getValueAsDouble(),
         null);
-    builder.addDoubleProperty("supply current: ", () -> m_shooterMasterMotor.getSupplyCurrent().getValueAsDouble(),
+    builder.addDoubleProperty("supply current", () -> m_shooterMasterMotor.getSupplyCurrent().getValueAsDouble(),
         null);
-    builder.addDoubleProperty("stator current: ", () -> m_shooterMasterMotor.getStatorCurrent().getValueAsDouble(),
+    builder.addDoubleProperty("stator current", () -> m_shooterMasterMotor.getStatorCurrent().getValueAsDouble(),
         null);
-    builder.addDoubleProperty("voltage: ", () -> m_shooterMasterMotor.getMotorVoltage().getValueAsDouble(), null);
-    builder.addDoubleProperty("target velocity: ", () -> getTargetVelocity(), null);
-    builder.addDoubleProperty("curr stored voltage ", () -> getStoredVoltage(), null);
+    builder.addDoubleProperty("voltage", () -> m_shooterMasterMotor.getMotorVoltage().getValueAsDouble(), null);
+    builder.addDoubleProperty("target velocity", () -> getTargetVelocity(), null);
+    builder.addDoubleProperty("curr stored voltage", () -> getStoredVoltage(), null);
   }
 
   /*

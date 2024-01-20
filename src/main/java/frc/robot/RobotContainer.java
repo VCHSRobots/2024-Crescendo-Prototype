@@ -117,7 +117,7 @@ public class RobotContainer {
         Commands.sequence(m_shooter.getShootMidCommand(), Commands.waitSeconds(1), m_intake.getFeedShooterCommand()));
     NamedCommands.registerCommand("pivotIntake", m_pivot.getGotoPositionUntilTargetCommand(POSITION.HOME));
     NamedCommands.registerCommand("pivotShootClose",
-        m_pivot.getGotoPositionUntilTargetCommand(POSITION.SOURCE));
+        m_pivot.getGotoPositionUntilTargetCommand(POSITION.SPEAKER_CLOSE_AUTO));
     NamedCommands.registerCommand("pivotShootMid",
         m_pivot.getGotoPositionUntilTargetCommand(POSITION.SPEAKER_MID_AUTO));
 
