@@ -110,12 +110,15 @@ public class RobotContainer {
 
     NamedCommands.registerCommand("intakePiece", m_intake.getIntakeUntilPieceCommand());
     NamedCommands.registerCommand("shootClose",
-        Commands.sequence(m_shooter.getShootCloseCommand(), Commands.waitSeconds(1), m_intake.getFeedShooterCommand()));
+        Commands.sequence(m_shooter.getShootCloseCommand().withTimeout(1),
+            m_intake.getFeedShooterCommand().withTimeout(1)));
     NamedCommands.registerCommand("shootMid",
         Commands.sequence(m_shooter.getShootMidCommand(), Commands.waitSeconds(1), m_intake.getFeedShooterCommand()));
-    NamedCommands.registerCommand("pivotIntake", Commands.none());
-    NamedCommands.registerCommand("pivotShootClose", Commands.none());
-    NamedCommands.registerCommand("pivotShootMid", Commands.none());
+    NamedCommands.registerCommand("pivotIntake", m_pivot.getGotoPositionUntilTargetCommand(POSITION.HOME));
+    NamedCommands.registerCommand("pivotShootClose",
+        m_pivot.getGotoPositionUntilTargetCommand(POSITION.SOURCE));
+    NamedCommands.registerCommand("pivotShootMid",
+        m_pivot.getGotoPositionUntilTargetCommand(POSITION.SPEAKER_MID_AUTO));
 
     // Build an auto chooser. This will use Commands.none() as the default option.
     autoChooser = AutoBuilder.buildAutoChooser();

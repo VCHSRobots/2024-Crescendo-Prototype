@@ -14,13 +14,13 @@
         {
           "type": "named",
           "data": {
-            "name": "shootClose"
+            "name": "pivotShootClose"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "intakeOut"
+            "name": "shootClose"
           }
         },
         {

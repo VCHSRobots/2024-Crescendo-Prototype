@@ -35,6 +35,8 @@ public class SRXPivot extends SubsystemBase {
     HOME(0),
     AMP(90),
     SPEAKER(30),
+    SPEAKER_CLOSE_AUTO(30),
+    SPEAKER_MID_AUTO(50),
     SOURCE(90);
 
     POSITION(double deg) {
@@ -109,7 +111,8 @@ public class SRXPivot extends SubsystemBase {
       m_PeriodicIO.controlState = CONTROL_STATE.MOTION_MAGIC;
     }
     m_PeriodicIO.targetTicks = angleToTicks(degrees);
-    m_pivotMaster.set(ControlMode.MotionMagic, m_PeriodicIO.targetTicks, DemandType.ArbitraryFeedForward, getFeedForward());
+    m_pivotMaster.set(ControlMode.MotionMagic, m_PeriodicIO.targetTicks, DemandType.ArbitraryFeedForward,
+        getFeedForward());
   }
 
   public void setTargetDegreesToCurrentPosition() {
@@ -162,6 +165,7 @@ public class SRXPivot extends SubsystemBase {
 
     builder.addDoubleProperty("target angle: ", () -> ticksToAngle(m_PeriodicIO.targetTicks), null);
     builder.addDoubleProperty("closed loop error", () -> m_pivotMaster.getClosedLoopError(), null);
+    builder.addBooleanProperty("is at target", () -> isAtTarget(), null);
   }
 
   /*
@@ -175,8 +179,7 @@ public class SRXPivot extends SubsystemBase {
     return run(() -> setTargetDegrees(pos.degrees));
   }
 
-  public Command getGotoAndWaitPositionCommand(POSITION pos) {
-    return getGotoPositionCommand(pos)
-        .alongWith(Commands.none().until(() -> isAtTarget()));
+  public Command getGotoPositionUntilTargetCommand(POSITION pos) {
+    return getGotoPositionCommand(pos).until(this::isAtTarget);
   }
 }
