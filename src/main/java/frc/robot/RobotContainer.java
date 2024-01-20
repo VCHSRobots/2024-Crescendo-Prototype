@@ -213,7 +213,7 @@ public class RobotContainer {
     }
     drivetrain.registerTelemetry(logger::telemeterize);
 
-    m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
+    m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative(new Pose2d())));
     m_driverController.pov(270).whileTrue(drivetrain.applyRequest(() -> {
       double x = 0;
       double y = 0;
