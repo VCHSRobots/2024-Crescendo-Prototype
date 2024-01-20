@@ -1,0 +1,55 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 1.373390793800354,
+      "y": 5.5926337242126465
+    },
+    "rotation": 0.0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "shootClose"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "shoot grab shoot.1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "pivotIntake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakePiece"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "shoot grab shoot.2"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shootMid"
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": true
+}
