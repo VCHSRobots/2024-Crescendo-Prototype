@@ -2,7 +2,7 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 3.303550958633423,
+      "x": 1.373390793800354,
       "y": 5.5926337242126465
     },
     "rotation": 0.0
@@ -24,9 +24,15 @@
           }
         },
         {
-          "type": "wait",
+          "type": "named",
           "data": {
-            "waitTime": 3.0
+            "name": "pivotIntake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakePiece"
           }
         },
         {
@@ -38,7 +44,7 @@
         {
           "type": "named",
           "data": {
-            "name": "shootClose"
+            "name": "shootMid"
           }
         }
       ]
