@@ -2,27 +2,15 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 1.9601582060306977,
-      "y": 6.950905330382089
+      "x": 1.29,
+      "y": 6.99
     },
-    "rotation": 0
+    "rotation": 0.0
   },
   "command": {
     "type": "sequential",
     "data": {
       "commands": [
-        {
-          "type": "named",
-          "data": {
-            "name": "pivotShootClose"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "shootClose"
-          }
-        },
         {
           "type": "path",
           "data": {

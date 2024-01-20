@@ -59,7 +59,7 @@ public class RobotContainer {
   private SendableChooser<Double> speedChooser = new SendableChooser<>();
   private double MaxSpeed = TunerConstants.kSpeedAt12VoltsMps; // Initial max is true top speed
   private final double TurtleSpeed = 0.1; // Reduction in speed from Max Speed, 0.1 = 10%
-  private final double MaxAngularRate = Math.PI * 1.5; // .75 rotation per second max angular velocity. Adjust for max
+  private final double MaxAngularRate = Math.PI * 2.0; // .75 rotation per second max angular velocity. Adjust for max
                                                        // turning rate speed.
   private final double TurtleAngularRate = Math.PI * 0.5; // .75 rotation per second max angular velocity. Adjust for
                                                           // max turning rate speed.
