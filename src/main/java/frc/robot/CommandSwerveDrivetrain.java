@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -46,11 +47,33 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             SwerveModuleConstants... modules) {
         super(driveTrainConstants, OdometryUpdateFrequency, modules);
         configurePathPlanner();
+        signalupdates();
     }
 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
         super(driveTrainConstants, modules);
         configurePathPlanner();
+        signalupdates();
+    }
+
+    public void signalupdates() {
+        for (var module : Modules) {
+            var drive = module.getDriveMotor();
+            var steer = module.getSteerMotor();
+
+            BaseStatusSignal.setUpdateFrequencyForAll(250,
+                    drive.getPosition(),
+                    drive.getVelocity(),
+                    drive.getMotorVoltage());
+
+            BaseStatusSignal.setUpdateFrequencyForAll(250,
+                    steer.getPosition(),
+                    steer.getVelocity(),
+                    steer.getMotorVoltage());
+
+            drive.optimizeBusUtilization();
+            steer.optimizeBusUtilization();
+        }
     }
 
     private void configurePathPlanner() {
@@ -91,23 +114,23 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     private SwerveVoltageRequest driveVoltageRequest = new SwerveVoltageRequest(true);
 
     private SysIdRoutine m_driveSysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(null, null, null, ModifiedSignalLogger.logState()),
+            new SysIdRoutine.Config(Volts.of(0.5).per(Seconds.of(1)), Volts.of(5), null, ModifiedSignalLogger.logState()),
             new SysIdRoutine.Mechanism(
-                    (Measure<Voltage> volts) -> setControl(driveVoltageRequest.withVoltage(volts.in(Volts))),
+                    (Measure<Voltage> volts) -> {setControl(driveVoltageRequest.withVoltage(volts.in(Volts)));},
                     null,
                     this));
 
     private SwerveVoltageRequest steerVoltageRequest = new SwerveVoltageRequest(false);
 
     private SysIdRoutine m_steerSysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(null, null, null, ModifiedSignalLogger.logState()),
+            new SysIdRoutine.Config(Volts.of(0.5).per(Seconds.of(1)), Volts.of(5), null, ModifiedSignalLogger.logState()),
             new SysIdRoutine.Mechanism(
                     (Measure<Voltage> volts) -> setControl(steerVoltageRequest.withVoltage(volts.in(Volts))),
                     null,
                     this));
 
     private SysIdRoutine m_slipSysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(Volts.of(0.25).per(Seconds.of(1)), null, null, ModifiedSignalLogger.logState()),
+            new SysIdRoutine.Config(Volts.of(0.5).per(Seconds.of(1)), null, null, ModifiedSignalLogger.logState()),
             new SysIdRoutine.Mechanism(
                     (Measure<Voltage> volts) -> setControl(driveVoltageRequest.withVoltage(volts.in(Volts))),
                     null,

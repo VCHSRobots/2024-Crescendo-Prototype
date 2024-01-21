@@ -1,13 +1,15 @@
 package frc.robot.Util;
 
 import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 
 public class SwerveVoltageRequest implements SwerveRequest {
-    private final MotionMagicVoltage m_motionMagicControl = new MotionMagicVoltage(0, false, 0, 0, false, false, false);
+    private final MotionMagicVoltage m_motionMagicControl = new MotionMagicVoltage(0, true, 0, 0, false, false, false);
+    // private final MotionMagicTorqueCurrentFOC m_motionMagicControl = new MotionMagicTorqueCurrentFOC(0, 0, 0, false, false, false);
     private final VoltageOut m_voltageOutControl = new VoltageOut(0.0);
 
     private double m_targetVoltage = 0.0;
@@ -37,7 +39,7 @@ public class SwerveVoltageRequest implements SwerveRequest {
                 module.getSteerMotor().setControl(m_voltageOutControl.withOutput(m_targetVoltage));
 
                 // Command drive motor to zero
-                module.getDriveMotor().setControl(m_motionMagicControl);
+                module.getDriveMotor().setControl(m_voltageOutControl.withOutput(0));
             }
         }
 

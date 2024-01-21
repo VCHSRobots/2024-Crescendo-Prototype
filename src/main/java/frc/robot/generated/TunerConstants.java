@@ -17,13 +17,14 @@ public class TunerConstants {
         // the
         // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
         private static final Slot0Configs steerGains = new Slot0Configs()
-                        .withKP(100).withKI(0).withKD(0.05)
-                        .withKS(0).withKV(1.5).withKA(0);
+                        .withKP(100).withKI(0).withKD(0.5)
+                        // .withKS(0.26).withKV(2.6).withKA(0.069);
+                        .withKS(0.1).withKV(1.5).withKA(0.03);
         // When using closed-loop control, the drive motor uses the control
         // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
         private static final Slot0Configs driveGains = new Slot0Configs()
                         .withKP(3).withKI(0).withKD(0)
-                        .withKS(0).withKV(0).withKA(0);
+                        .withKS(0.15372).withKV(0.1133).withKA(0.001384);
 
         // The closed-loop output type to use for the steer motors;
         // This affects the PID/FF gains for the steer motors
@@ -34,7 +35,7 @@ public class TunerConstants {
 
         // The stator current at which the wheels start to slip;
         // This needs to be tuned to your individual robot
-        private static final double kSlipCurrentA = 120.0;
+        private static final double kSlipCurrentA = 200.0;
 
         // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
         // This may need to be tuned to your individual robot
@@ -94,7 +95,7 @@ public class TunerConstants {
         private static final int kFrontRightDriveMotorId = 17;
         private static final int kFrontRightSteerMotorId = 18;
         private static final int kFrontRightEncoderId = 22;
-        private static final double kFrontRightEncoderOffset = -0.341309;// -0.361328;
+        private static final double kFrontRightEncoderOffset = -0.169189;//  -0.341309;// -0.361328;
                                                                          // //-0.340576;//-0.347656;//-0.35888671875;
 
         private static final double kFrontRightXPosInches = 10.375;
