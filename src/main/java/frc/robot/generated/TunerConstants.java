@@ -17,21 +17,21 @@ public class TunerConstants {
         // the
         // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
         private static final Slot0Configs steerGains = new Slot0Configs()
-                        .withKP(100).withKI(0).withKD(0.5)
+                        .withKP(100).withKI(0).withKD(0.05)
                         // .withKS(0.26).withKV(2.6).withKA(0.069);
                         .withKS(0.1).withKV(1.5).withKA(0.03);
         // When using closed-loop control, the drive motor uses the control
         // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
         private static final Slot0Configs driveGains = new Slot0Configs()
-                        .withKP(3).withKI(0).withKD(0)
-                        .withKS(0.15372).withKV(0.1133).withKA(0.001384);
+                        .withKP(0.15).withKI(0).withKD(0.002)
+                        .withKS(0.002).withKV(0.1133).withKA(0.001384);
 
         // The closed-loop output type to use for the steer motors;
         // This affects the PID/FF gains for the steer motors
-        private static final ClosedLoopOutputType steerClosedLoopOutput = ClosedLoopOutputType.TorqueCurrentFOC;
+        private static final ClosedLoopOutputType steerClosedLoopOutput = ClosedLoopOutputType.Voltage;
         // The closed-loop output type to use for the drive motors;
         // This affects the PID/FF gains for the drive motors
-        private static final ClosedLoopOutputType driveClosedLoopOutput = ClosedLoopOutputType.TorqueCurrentFOC;
+        private static final ClosedLoopOutputType driveClosedLoopOutput = ClosedLoopOutputType.Voltage;
 
         // The stator current at which the wheels start to slip;
         // This needs to be tuned to your individual robot
@@ -70,6 +70,8 @@ public class TunerConstants {
                         .withSteerMotorGearRatio(kSteerGearRatio)
                         .withWheelRadius(kWheelRadiusInches)
                         .withSlipCurrent(kSlipCurrentA)
+                        .withDriveFrictionVoltage(0.25)
+                        .withSteerFrictionVoltage(0.25)
                         .withSteerMotorGains(steerGains)
                         .withDriveMotorGains(driveGains)
                         .withSteerMotorClosedLoopOutput(steerClosedLoopOutput)
@@ -95,8 +97,7 @@ public class TunerConstants {
         private static final int kFrontRightDriveMotorId = 17;
         private static final int kFrontRightSteerMotorId = 18;
         private static final int kFrontRightEncoderId = 22;
-        private static final double kFrontRightEncoderOffset = -0.169189;//  -0.341309;// -0.361328;
-                                                                         // //-0.340576;//-0.347656;//-0.35888671875;
+        private static final double kFrontRightEncoderOffset = -0.169189; // TODO find this offset again
 
         private static final double kFrontRightXPosInches = 10.375;
         private static final double kFrontRightYPosInches = -10.375;
