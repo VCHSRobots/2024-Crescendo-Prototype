@@ -6,6 +6,7 @@ package frc.robot;
 
 import java.util.function.Supplier;
 
+import com.ctre.phoenix.music.Orchestra;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
@@ -103,6 +104,8 @@ public class RobotContainer {
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+
+    
     // Detect if controllers are missing / Stop multiple warnings
     DriverStation.silenceJoystickConnectionWarning(true);
 
@@ -162,6 +165,7 @@ public class RobotContainer {
     // }, m_shooter));
 
     m_intake.setDefaultCommand(Commands.run(() -> m_intake.stop(), m_intake));
+
     // m_pivot.setDefaultCommand(m_pivot.getHoldPositionCommand());
 
     // right bumper lower pivot
@@ -185,6 +189,7 @@ public class RobotContainer {
     m_driverController.x().whileTrue(m_pivot.getGotoPositionCommand(POSITION.AMP));
     // m_driverController.y().whileTrue(m_pivot.getGotoPositionCommand(POSITION.SOURCE));
 
+    m_driverController.start().onTrue(Commands.runOnce(()->m_shooter.play()));
     // increase shooter speed
     m_driverController.pov(0).onTrue(new InstantCommand(() -> m_shooter.increaseVoltage(.5)));
     // increase shooter speed

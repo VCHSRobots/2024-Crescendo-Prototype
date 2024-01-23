@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
@@ -19,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants.ShooterConstants;
 
 public class Shooter extends SubsystemBase {
@@ -27,6 +29,8 @@ public class Shooter extends SubsystemBase {
   private final TalonFX m_shooterFollowerMotor = new TalonFX(
       ShooterConstants.kShooterBottomFollowerMotorId.getDeviceNumber(),
       ShooterConstants.kShooterBottomFollowerMotorId.getBus());
+
+  Orchestra m_orchestra = new Orchestra();
 
   private final VoltageOut m_shooterVoltageOut = new VoltageOut(0);
   private final MotionMagicVelocityVoltage m_shooterVelocityMotionMagic = new MotionMagicVelocityVoltage(0);
@@ -37,6 +41,17 @@ public class Shooter extends SubsystemBase {
 
   /** Creates a new Shooter. */
   public Shooter() {
+
+    // Add a single device to the orchestra
+    m_orchestra.addInstrument(m_shooterMasterMotor);
+
+    // Attempt to load the chrp
+    var status = m_orchestra.loadMusic("OOF.chrp");
+
+    if (!status.isOK()) {
+      // log error
+    }
+
     TalonFXConfiguration shooterMotorConfig = new TalonFXConfiguration();
     shooterMotorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     shooterMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -71,6 +86,11 @@ public class Shooter extends SubsystemBase {
   /*
    * NORMAL FUNCTIONALITY
    */
+
+  public void play() {
+    m_orchestra.play();
+    
+  }
 
   public void shoot(double percentOut) {
     double maxVoltage = 12.0;
