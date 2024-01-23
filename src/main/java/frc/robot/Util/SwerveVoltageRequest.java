@@ -7,7 +7,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 
 public class SwerveVoltageRequest implements SwerveRequest {
-    private final MotionMagicVoltage m_motionMagicControl = new MotionMagicVoltage(0, false, 0, 0, false, false, false);
+    private final MotionMagicVoltage m_motionMagicControl = new MotionMagicVoltage(0, true, 0, 0, false, false, false);
     private final VoltageOut m_voltageOutControl = new VoltageOut(0.0);
 
     private double m_targetVoltage = 0.0;
