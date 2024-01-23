@@ -11,6 +11,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -71,8 +72,8 @@ public class RobotContainer {
   // Field-centric driving in Open Loop, can change to closed loop after
   // characterization
   SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-      .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withDeadband(MaxSpeed * 0.02)
-      .withRotationalDeadband(AngularRate * 0.02);
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withDeadband(MaxSpeed * 0.005)
+      .withRotationalDeadband(AngularRate * 0.005);
   // Field-centric driving in Closed Loop. Comment above and uncomment below.
   // SwerveRequest.FieldCentric drive = new
   // SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.Velocity).withDecoadband(MaxSpeed
@@ -198,7 +199,14 @@ public class RobotContainer {
 
     // default commands
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
-        drivetrain.applyRequest(controlStyle).ignoringDisable(true));
+        drivetrain.applyRequest(() -> {
+          var x = MathUtil.applyDeadband(-m_driverController.getLeftY(), 0.1);
+          var y = MathUtil.applyDeadband(-m_driverController.getLeftX(), 0.1);
+          var r = MathUtil.applyDeadband(-m_driverController.getRightX(), 0.1);
+          return drive.withVelocityX(x * MaxSpeed) // Drive forward -Y
+              .withVelocityY(y * MaxSpeed) // Drive left with negative X (left)
+              .withRotationalRate(r * AngularRate); // Drive counterclockwise with negative X (left);
+        }).ignoringDisable(true));
 
     if (Utils.isSimulation()) {
       drivetrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(0)));
