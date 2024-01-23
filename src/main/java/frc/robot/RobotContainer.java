@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
-
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.Utils;
@@ -13,6 +11,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -21,14 +20,21 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.Autos;
 import frc.robot.Util.SysIdRoutine.Direction;
 import frc.robot.Vision.Limelight;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.SRXPivot;
+import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.SRXPivot.POSITION;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -40,6 +46,10 @@ import frc.robot.generated.TunerConstants;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
+  private final Intake m_intake = new Intake();
+  private final Shooter m_shooter = new Shooter();
+  private final SRXPivot m_pivot = new SRXPivot();
+
   private SendableChooser<Command> autoChooser;
   private SendableChooser<String> controlChooser = new SendableChooser<>();
   private SendableChooser<Double> speedChooser = new SendableChooser<>();
@@ -55,14 +65,15 @@ public class RobotContainer {
       OperatorConstants.kDriverControllerPort);
   private final CommandXboxController m_operatorController = new CommandXboxController(1); // operator xbox controller
   private final CommandXboxController m_testController = new CommandXboxController(2);
+  private final CommandXboxController m_sysidController = new CommandXboxController(3);
 
   static CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain; // drivetrain
 
   // Field-centric driving in Open Loop, can change to closed loop after
   // characterization
   SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-      .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withDeadband(MaxSpeed * 0.1)
-      .withRotationalDeadband(AngularRate * 0.1);
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withDeadband(MaxSpeed * 0.005)
+      .withRotationalDeadband(AngularRate * 0.005);
   // Field-centric driving in Closed Loop. Comment above and uncomment below.
   // SwerveRequest.FieldCentric drive = new
   // SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.Velocity).withDecoadband(MaxSpeed
@@ -120,6 +131,9 @@ public class RobotContainer {
     SmartDashboard.putData("Auto Chooser", autoChooser);
     // Configure the trigger bindings
     configureBindings();
+    Shuffleboard.getTab("ss").add("intake", m_intake);
+    Shuffleboard.getTab("ss").add("shooter", m_shooter);
+    Shuffleboard.getTab("ss").add("pivot", m_pivot);
   }
 
   /**
@@ -137,16 +151,69 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
+    // left y shooter speed
+    // m_shooter.setDefaultCommand(new RunCommand(() -> {
+    // double leftY = m_driverController.getLeftY();
+    // if (Math.abs(leftY) > 0.04) {
+    // m_shooter.shoot(m_driverController.getLeftY());
+    // } else {
+    // m_shooter.shoot(0);
+    // }
+    // }, m_shooter));
+
+    m_intake.setDefaultCommand(Commands.run(() -> m_intake.stop(), m_intake));
+    // m_pivot.setDefaultCommand(m_pivot.getHoldPositionCommand());
+
+    // right bumper lower pivot
+    m_driverController.rightBumper()
+        .whileTrue(new RunCommand(() -> m_pivot.set(0.3), m_pivot)
+            .finallyDo(() -> m_pivot.setTargetDegreesToCurrentPosition()));
+    // right bumper raise pivot
+    m_driverController.leftBumper()
+        .whileTrue(new RunCommand(() -> m_pivot.set(-0.3), m_pivot)
+            .finallyDo(() -> m_pivot.setTargetDegreesToCurrentPosition()));
+
+    // right trigger intake speed
+    m_driverController.rightTrigger(0.1)
+        .whileTrue(new RunCommand(() -> m_intake.set(m_driverController.getRightTriggerAxis() * 0.75), m_intake));
+    // left trigger reverse speed
+    m_driverController.leftTrigger(0.1)
+        .whileTrue(m_intake.getIntakeUntilPieceCommand());
+
+    m_driverController.a().whileTrue(m_pivot.getGotoPositionCommand(POSITION.HOME));
+    m_driverController.b().whileTrue(m_pivot.getGotoPositionCommand(POSITION.SPEAKER));
+    m_driverController.x().whileTrue(m_pivot.getGotoPositionCommand(POSITION.AMP));
+    // m_driverController.y().whileTrue(m_pivot.getGotoPositionCommand(POSITION.SOURCE));
+
+    // increase shooter speed
+    m_driverController.pov(0).onTrue(new InstantCommand(() -> m_shooter.increaseVoltage(.5)));
+    // increase shooter speed
+    m_driverController.pov(180).onTrue(new InstantCommand(() -> m_shooter.decreaseVoltage(.5)));
+    // on/off shooter
+    m_driverController.pov(90)
+        .toggleOnTrue(new RunCommand(() -> m_shooter.setToCurrVoltage(), m_shooter).finallyDo(() -> m_shooter.stop()));
+
+    // zero
+    m_driverController.back().onTrue(new InstantCommand(() -> m_pivot.zero(), m_pivot));
     newSpeed();
 
+    // default commands
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
-        drivetrain.applyRequest(controlStyle).ignoringDisable(true));
+        drivetrain.applyRequest(() -> {
+          var x = MathUtil.applyDeadband(-m_driverController.getLeftY(), 0.1);
+          var y = MathUtil.applyDeadband(-m_driverController.getLeftX(), 0.1);
+          var r = MathUtil.applyDeadband(-m_driverController.getRightX(), 0.1);
+          return drive.withVelocityX(x * MaxSpeed) // Drive forward -Y
+              .withVelocityY(y * MaxSpeed) // Drive left with negative X (left)
+              .withRotationalRate(r * AngularRate); // Drive counterclockwise with negative X (left);
+        }).ignoringDisable(true));
 
     if (Utils.isSimulation()) {
       drivetrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(0)));
     }
     drivetrain.registerTelemetry(logger::telemeterize);
 
+    // driver controller
     m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
     m_driverController.pov(270).whileTrue(drivetrain.applyRequest(()->drivetrain.limeLightTracking()));
 
@@ -159,6 +226,21 @@ public class RobotContainer {
     m_testController.y()
         .whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(Rotation2d.fromDegrees(90))));
 
+    m_sysidController.x().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kForward));
+    m_sysidController.x().and(m_sysidController.pov(180)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kReverse));
+
+    m_sysidController.y().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveDynamTest(Direction.kForward));
+    m_sysidController.y().and(m_sysidController.pov(180)).whileTrue(drivetrain.runDriveDynamTest(Direction.kReverse));
+
+    m_sysidController.a().and(m_sysidController.pov(0)).whileTrue(drivetrain.runSteerQuasiTest(Direction.kForward));
+    m_sysidController.a().and(m_sysidController.pov(180)).whileTrue(drivetrain.runSteerQuasiTest(Direction.kReverse));
+
+    m_sysidController.b().and(m_sysidController.pov(0)).whileTrue(drivetrain.runSteerDynamTest(Direction.kForward));
+    m_sysidController.b().and(m_sysidController.pov(180)).whileTrue(drivetrain.runSteerDynamTest(Direction.kReverse));
+
+    // Drivetrain needs to be placed against a sturdy wall and test stopped
+    // immediately upon wheel slip
+    m_sysidController.back().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveSlipTest());
   }
 
   /**
@@ -175,5 +257,13 @@ public class RobotContainer {
   private void newSpeed() {
     lastSpeed = speedChooser.getSelected();
     MaxSpeed = TunerConstants.kSpeedAt12VoltsMps * lastSpeed;
+  }
+
+  public void setPivotTargetToCurrentPosition() {
+    m_pivot.setTargetDegreesToCurrentPosition();
+  }
+
+  public void setPivotStop() {
+    m_pivot.stop();
   }
 }
