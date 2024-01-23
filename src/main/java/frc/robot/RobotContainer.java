@@ -4,15 +4,6 @@
 
 package frc.robot;
 
-import frc.robot.Constants.OperatorConstants;
-import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.Pivot;
-import frc.robot.subsystems.SRXPivot;
-import frc.robot.subsystems.Shooter;
-import frc.robot.subsystems.SRXPivot.POSITION;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
-
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.Utils;
@@ -31,14 +22,18 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Util.SysIdRoutine.Direction;
 import frc.robot.Vision.Limelight;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.SRXPivot;
+import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.SRXPivot.POSITION;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -157,17 +152,17 @@ public class RobotContainer {
   private void configureBindings() {
     // left y shooter speed
     // m_shooter.setDefaultCommand(new RunCommand(() -> {
-    //   double leftY = m_driverController.getLeftY();
-    //   if (Math.abs(leftY) > 0.04) {
-    //     m_shooter.shoot(m_driverController.getLeftY());
-    //   } else {
-    //     m_shooter.shoot(0);
-    //   }
+    // double leftY = m_driverController.getLeftY();
+    // if (Math.abs(leftY) > 0.04) {
+    // m_shooter.shoot(m_driverController.getLeftY());
+    // } else {
+    // m_shooter.shoot(0);
+    // }
     // }, m_shooter));
 
     m_intake.setDefaultCommand(Commands.run(() -> m_intake.stop(), m_intake));
     // m_pivot.setDefaultCommand(m_pivot.getHoldPositionCommand());
-    
+
     // right bumper lower pivot
     m_driverController.rightBumper()
         .whileTrue(new RunCommand(() -> m_pivot.set(0.3), m_pivot)
@@ -201,6 +196,7 @@ public class RobotContainer {
     m_driverController.back().onTrue(new InstantCommand(() -> m_pivot.zero(), m_pivot));
     newSpeed();
 
+    // default commands
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
         drivetrain.applyRequest(controlStyle).ignoringDisable(true));
 
@@ -209,28 +205,28 @@ public class RobotContainer {
     }
     drivetrain.registerTelemetry(logger::telemeterize);
 
+    // driver controller
     m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
-    m_driverController.pov(270).whileTrue(drivetrain.applyRequest(()-> {
+    m_driverController.pov(270).whileTrue(drivetrain.applyRequest(() -> {
       double x = 0;
       double y = 0;
       double r = 0;
       double maxSpeed = 2.0;
       var tag = vision.getTagPoseRobotSpace();
-      Pose2d goal = new Pose2d(new Translation2d(1.5, 0), new Rotation2d()); //TODO check whether 180
+      Pose2d goal = new Pose2d(new Translation2d(1.5, 0), new Rotation2d()); // TODO check whether 180
 
-      x = (tag.getZ()-goal.getX())* 0.5;
-      x = Math.copySign(Math.min(Math.abs(x), maxSpeed),x);
+      x = (tag.getZ() - goal.getX()) * 0.5;
+      x = Math.copySign(Math.min(Math.abs(x), maxSpeed), x);
 
-      y = (tag.getX()-goal.getY())* 0.5;
-      y = -Math.copySign(Math.min(Math.abs(y), maxSpeed),y);
+      y = (tag.getX() - goal.getY()) * 0.5;
+      y = -Math.copySign(Math.min(Math.abs(y), maxSpeed), y);
 
-      r = (Units.radiansToDegrees(tag.getRotation().getY())-goal.getRotation().getDegrees());
-      r = -Math.copySign(Math.min(Math.abs(r), 270),r);
+      r = (Units.radiansToDegrees(tag.getRotation().getY()) - goal.getRotation().getDegrees());
+      r = -Math.copySign(Math.min(Math.abs(r), 270), r);
 
-
-      return forwardStraight.withDeadband(.05).withVelocityX(x).withVelocityY(y).withRotationalRate(Units.degreesToRadians(r));
-    }
-      ));
+      return forwardStraight.withDeadband(.05).withVelocityX(x).withVelocityY(y)
+          .withRotationalRate(Units.degreesToRadians(r));
+    }));
 
     // testing controller
     m_testController.a().whileTrue(drivetrain.applyRequest(() -> brake));
@@ -241,20 +237,21 @@ public class RobotContainer {
     m_testController.y()
         .whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(Rotation2d.fromDegrees(90))));
 
-        m_sysidController.x().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kForward));
-        m_sysidController.x().and(m_sysidController.pov(180)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kReverse));
-    
-        m_sysidController.y().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveDynamTest(Direction.kForward));
-        m_sysidController.y().and(m_sysidController.pov(180)).whileTrue(drivetrain.runDriveDynamTest(Direction.kReverse));
-    
-        m_sysidController.a().and(m_sysidController.pov(0)).whileTrue(drivetrain.runSteerQuasiTest(Direction.kForward));
-        m_sysidController.a().and(m_sysidController.pov(180)).whileTrue(drivetrain.runSteerQuasiTest(Direction.kReverse));
-    
-        m_sysidController.b().and(m_sysidController.pov(0)).whileTrue(drivetrain.runSteerDynamTest(Direction.kForward));
-        m_sysidController.b().and(m_sysidController.pov(180)).whileTrue(drivetrain.runSteerDynamTest(Direction.kReverse));
-    
-        // Drivetrain needs to be placed against a sturdy wall and test stopped immediately upon wheel slip
-        m_sysidController.back().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveSlipTest());
+    m_sysidController.x().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kForward));
+    m_sysidController.x().and(m_sysidController.pov(180)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kReverse));
+
+    m_sysidController.y().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveDynamTest(Direction.kForward));
+    m_sysidController.y().and(m_sysidController.pov(180)).whileTrue(drivetrain.runDriveDynamTest(Direction.kReverse));
+
+    m_sysidController.a().and(m_sysidController.pov(0)).whileTrue(drivetrain.runSteerQuasiTest(Direction.kForward));
+    m_sysidController.a().and(m_sysidController.pov(180)).whileTrue(drivetrain.runSteerQuasiTest(Direction.kReverse));
+
+    m_sysidController.b().and(m_sysidController.pov(0)).whileTrue(drivetrain.runSteerDynamTest(Direction.kForward));
+    m_sysidController.b().and(m_sysidController.pov(180)).whileTrue(drivetrain.runSteerDynamTest(Direction.kReverse));
+
+    // Drivetrain needs to be placed against a sturdy wall and test stopped
+    // immediately upon wheel slip
+    m_sysidController.back().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveSlipTest());
   }
 
   /**
@@ -276,6 +273,7 @@ public class RobotContainer {
   public void setPivotTargetToCurrentPosition() {
     m_pivot.setTargetDegreesToCurrentPosition();
   }
+
   public void setPivotStop() {
     m_pivot.stop();
   }
