@@ -15,6 +15,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -48,6 +49,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         super(driveTrainConstants, OdometryUpdateFrequency, modules);
         configurePathPlanner();
         signalupdates();
+        configSteerNeutralMode(NeutralModeValue.Coast);
     }
 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
@@ -74,6 +76,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             drive.optimizeBusUtilization();
             steer.optimizeBusUtilization();
         }
+        configSteerNeutralMode(NeutralModeValue.Coast);
     }
 
     private void configurePathPlanner() {
