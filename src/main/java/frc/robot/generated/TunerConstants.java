@@ -13,17 +13,32 @@ import frc.robot.CommandSwerveDrivetrain;
 public class TunerConstants {
     // Both sets of gains need to be tuned to your individual robot.
 
+    /*
+     * copy of 2024-01-22 tuned values by JC
+     * // The steer motor uses any SwerveModule.SteerRequestType control request
+     * with
+     * // the
+     * // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
+     * private static final Slot0Configs steerGains = new Slot0Configs()
+     * .withKP(69).withKI(0).withKD(0)
+     * .withKS(0.1).withKV(1.5).withKA(0.001);
+     * // When using closed-loop control, the drive motor uses the control
+     * // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
+     * private static final Slot0Configs driveGains = new Slot0Configs()
+     * .withKP(0.186).withKI(0).withKD(0)
+     * .withKS(0.0111).withKV(0.123).withKA(0.029);
+     */
     // The steer motor uses any SwerveModule.SteerRequestType control request with
     // the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     private static final Slot0Configs steerGains = new Slot0Configs()
-            .withKP(100).withKI(0).withKD(0.05)
-            .withKS(0).withKV(1.5).withKA(0);
+            .withKP(69).withKI(0).withKD(0)
+            .withKS(0.1).withKV(1.5).withKA(0.001);
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains = new Slot0Configs()
-            .withKP(0.15).withKI(0).withKD(0.002)
-            .withKS(0.002).withKV(0.12).withKA(0);
+            .withKP(0.186).withKI(0).withKD(0)
+            .withKS(0.1).withKV(0.117).withKA(0.029);
 
     // The closed-loop output type to use for the steer motors;
     // This affects the PID/FF gains for the steer motors
@@ -84,8 +99,7 @@ public class TunerConstants {
     private static final int kFrontLeftDriveMotorId = 11;
     private static final int kFrontLeftSteerMotorId = 12;
     private static final int kFrontLeftEncoderId = 19;
-    private static final double kFrontLeftEncoderOffset = -0.191895; // -0.191162; //-0.191650; //-0.19091796875; //
-                                                                     // 0.191650
+    private static final double kFrontLeftEncoderOffset = -0.191895;
 
     private static final double kFrontLeftXPosInches = 10.375;
     private static final double kFrontLeftYPosInches = 10.375;
@@ -94,8 +108,7 @@ public class TunerConstants {
     private static final int kFrontRightDriveMotorId = 17;
     private static final int kFrontRightSteerMotorId = 18;
     private static final int kFrontRightEncoderId = 22;
-    private static final double kFrontRightEncoderOffset = 0.484619;// -0.361328;
-                                                                     // //-0.340576;//-0.347656;//-0.35888671875;
+    private static final double kFrontRightEncoderOffset = -0.313477;
 
     private static final double kFrontRightXPosInches = 10.375;
     private static final double kFrontRightYPosInches = -10.375;
@@ -104,9 +117,7 @@ public class TunerConstants {
     private static final int kBackLeftDriveMotorId = 13;
     private static final int kBackLeftSteerMotorId = 14;
     private static final int kBackLeftEncoderId = 20;
-    private static final double kBackLeftEncoderOffset = -0.370117;// -0.370605; //-0.371094; //-0.37109375; //
-                                                                   // 0.371094
-
+    private static final double kBackLeftEncoderOffset = -0.370117;
     private static final double kBackLeftXPosInches = -10.375;
     private static final double kBackLeftYPosInches = 10.375;
 
@@ -114,8 +125,7 @@ public class TunerConstants {
     private static final int kBackRightDriveMotorId = 15;
     private static final int kBackRightSteerMotorId = 16;
     private static final int kBackRightEncoderId = 21;
-    private static final double kBackRightEncoderOffset = 0.221680;// 0.222412;//
-                                                                   // 0.212646;//0.188232;//0.08447265625;
+    private static final double kBackRightEncoderOffset = 0.221680;
 
     private static final double kBackRightXPosInches = -10.375;
     private static final double kBackRightYPosInches = -10.375;

@@ -4,11 +4,13 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -42,10 +44,12 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency, SwerveModuleConstants... modules) {
         super(driveTrainConstants, OdometryUpdateFrequency, modules);
         configurePathPlanner();
+        configSteerNeutralMode(NeutralModeValue.Coast);
     }
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
         super(driveTrainConstants, modules);
         configurePathPlanner();
+        configSteerNeutralMode(NeutralModeValue.Coast);
     }
 
     private void configurePathPlanner() {
@@ -174,5 +178,36 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             torqueCurrentConfigs.PeakForwardTorqueCurrent = torqueCurrentLimit;
             torqueCurrentConfigs.PeakReverseTorqueCurrent = -torqueCurrentLimit;
         }
+    }
+
+    /**
+     * Configures the neutral mode to use for all modules' drive motors.
+     *
+     * @param neutralMode The drive motor neutral mode
+     * @return Status code of the first failed config call, or OK if all succeeded
+     */
+    public StatusCode configSteerNeutralMode(NeutralModeValue neutralMode) {
+        var status = StatusCode.OK;
+        for (var module : Modules) {
+            var configs = new MotorOutputConfigs();
+            /* First read the configs so they're up-to-date */
+            for (int i = 0; i < 3; i++) {
+                status = module.getSteerMotor().getConfigurator().refresh(configs);
+                if (status.isOK()) {
+                    /* Then set the neutral mode config to the appropriate value */
+                    configs.NeutralMode = neutralMode;
+                    status = module.getSteerMotor().getConfigurator().apply(configs);
+                }
+                if (!status.isOK()) {
+                    System.out.println(
+                            "TalonFX ID " + module.getSteerMotor().getDeviceID()
+                                    + " failed config neutral mode with error "
+                                    + status.toString());
+                } else {
+                    break;
+                }
+            }
+        }
+        return status;
     }
 }
