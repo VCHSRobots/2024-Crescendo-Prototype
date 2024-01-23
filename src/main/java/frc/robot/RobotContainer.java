@@ -4,15 +4,6 @@
 
 package frc.robot;
 
-import frc.robot.Constants.OperatorConstants;
-import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.Pivot;
-import frc.robot.subsystems.SRXPivot;
-import frc.robot.subsystems.Shooter;
-import frc.robot.subsystems.SRXPivot.POSITION;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
-
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.Utils;
@@ -21,6 +12,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -32,14 +24,18 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Util.SysIdRoutine.Direction;
 import frc.robot.Vision.Limelight;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.SRXPivot;
+import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.SRXPivot.POSITION;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -76,8 +72,8 @@ public class RobotContainer {
   // Field-centric driving in Open Loop, can change to closed loop after
   // characterization
   SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-      .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withDeadband(MaxSpeed * 0.01)
-      .withRotationalDeadband(AngularRate * 0.01);
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withDeadband(MaxSpeed * 0.005)
+      .withRotationalDeadband(AngularRate * 0.005);
   // Field-centric driving in Closed Loop. Comment above and uncomment below.
   // SwerveRequest.FieldCentric drive = new
   // SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.Velocity).withDecoadband(MaxSpeed
@@ -207,14 +203,23 @@ public class RobotContainer {
     m_driverController.back().onTrue(new InstantCommand(() -> m_pivot.zero(), m_pivot));
     newSpeed();
 
+    // default commands
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
-        drivetrain.applyRequest(controlStyle).ignoringDisable(true));
+        drivetrain.applyRequest(() -> {
+          var x = MathUtil.applyDeadband(-m_driverController.getLeftY(), 0.1);
+          var y = MathUtil.applyDeadband(-m_driverController.getLeftX(), 0.1);
+          var r = MathUtil.applyDeadband(-m_driverController.getRightX(), 0.1);
+          return drive.withVelocityX(x * MaxSpeed) // Drive forward -Y
+              .withVelocityY(y * MaxSpeed) // Drive left with negative X (left)
+              .withRotationalRate(r * AngularRate); // Drive counterclockwise with negative X (left);
+        }).ignoringDisable(true));
 
     if (Utils.isSimulation()) {
       drivetrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(0)));
     }
     drivetrain.registerTelemetry(logger::telemeterize);
 
+    // driver controller
     m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
     m_driverController.pov(270).whileTrue(drivetrain.applyRequest(() -> {
       double x = 0;
@@ -246,20 +251,21 @@ public class RobotContainer {
     m_testController.y()
         .whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(Rotation2d.fromDegrees(90))));
 
-        m_sysidController.x().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kForward));
-        m_sysidController.x().and(m_sysidController.pov(180)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kReverse));
-    
-        m_sysidController.y().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveDynamTest(Direction.kForward));
-        m_sysidController.y().and(m_sysidController.pov(180)).whileTrue(drivetrain.runDriveDynamTest(Direction.kReverse));
-    
-        m_sysidController.a().and(m_sysidController.pov(0)).whileTrue(drivetrain.runSteerQuasiTest(Direction.kForward));
-        m_sysidController.a().and(m_sysidController.pov(180)).whileTrue(drivetrain.runSteerQuasiTest(Direction.kReverse));
-    
-        m_sysidController.b().and(m_sysidController.pov(0)).whileTrue(drivetrain.runSteerDynamTest(Direction.kForward));
-        m_sysidController.b().and(m_sysidController.pov(180)).whileTrue(drivetrain.runSteerDynamTest(Direction.kReverse));
-    
-        // Drivetrain needs to be placed against a sturdy wall and test stopped immediately upon wheel slip
-        m_sysidController.back().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveSlipTest());
+    m_sysidController.x().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kForward));
+    m_sysidController.x().and(m_sysidController.pov(180)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kReverse));
+
+    m_sysidController.y().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveDynamTest(Direction.kForward));
+    m_sysidController.y().and(m_sysidController.pov(180)).whileTrue(drivetrain.runDriveDynamTest(Direction.kReverse));
+
+    m_sysidController.a().and(m_sysidController.pov(0)).whileTrue(drivetrain.runSteerQuasiTest(Direction.kForward));
+    m_sysidController.a().and(m_sysidController.pov(180)).whileTrue(drivetrain.runSteerQuasiTest(Direction.kReverse));
+
+    m_sysidController.b().and(m_sysidController.pov(0)).whileTrue(drivetrain.runSteerDynamTest(Direction.kForward));
+    m_sysidController.b().and(m_sysidController.pov(180)).whileTrue(drivetrain.runSteerDynamTest(Direction.kReverse));
+
+    // Drivetrain needs to be placed against a sturdy wall and test stopped
+    // immediately upon wheel slip
+    m_sysidController.back().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveSlipTest());
   }
 
   /**
