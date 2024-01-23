@@ -57,11 +57,11 @@ public class TunerConstants {
 
     private static final double kDriveGearRatio = 6.122448979591837;
     private static final double kSteerGearRatio = 21.428571428571427;
-    private static final double kWheelRadiusInches = Units.metersToInches(0.0989) / 2;
+    private static final double kWheelRadiusInches = Units.metersToInches(0.0989) / 2.0;
 
     // Theoretical free speed (m/s) at 12v applied output;
     // This needs to be tuned to your individual robot
-    public static final double kSpeedAt12VoltsMps = 107.0 / kDriveGearRatio * Math.PI * 2
+    public static final double kSpeedAt12VoltsMps = 107.0 / kDriveGearRatio * Math.PI * 2.0
             * Units.inchesToMeters(kWheelRadiusInches); // 107 rps =
 
     private static final boolean kSteerMotorReversed = true;
