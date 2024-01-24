@@ -23,6 +23,7 @@ import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -91,7 +92,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
                 new HolonomicPathFollowerConfig(new PIDConstants(10, 0, 0),
                         new PIDConstants(10, 0, 0),
                         TunerConstants.kSpeedAt12VoltsMps,
-                        TunerConstants.maxModuleRadius,
+                       Units.inchesToMeters(TunerConstants.maxModuleRadius),
                         new ReplanningConfig()),
                 () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red, // don't flip path TODO verify
                                                                                          // how to change this correctly
