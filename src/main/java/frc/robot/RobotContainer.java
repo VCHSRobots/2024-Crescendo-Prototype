@@ -105,10 +105,11 @@ public class RobotContainer {
     // Detect if controllers are missing / Stop multiple warnings
     DriverStation.silenceJoystickConnectionWarning(true);
 
-    NamedCommands.registerCommand("intakePiece", m_intake.getIntakeUntilPieceCommand());
+    NamedCommands.registerCommand("intakePiece", m_intake.getIntakeCommand());
     NamedCommands.registerCommand("shootClose",
-        Commands.sequence(m_shooter.getShootCloseCommand().withTimeout(1),
-            m_intake.getFeedShooterCommand().withTimeout(1)));
+        Commands.race(
+            m_shooter.getShootCloseCommand(),
+            Commands.sequence(Commands.waitSeconds(1), m_intake.getFeedShooterCommand().withTimeout(1))));
     NamedCommands.registerCommand("shootMid",
         Commands.sequence(m_shooter.getShootMidCommand(), Commands.waitSeconds(1), m_intake.getFeedShooterCommand()));
     NamedCommands.registerCommand("pivotIntake", m_pivot.getGotoPositionUntilTargetCommand(POSITION.HOME));
