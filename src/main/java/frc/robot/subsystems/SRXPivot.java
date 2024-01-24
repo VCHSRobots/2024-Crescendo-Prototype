@@ -130,8 +130,11 @@ public class SRXPivot extends SubsystemBase {
 
   private boolean isAtTarget() {
     return m_PeriodicIO.controlState == CONTROL_STATE.MOTION_MAGIC
-        && ticksToAngle(Math.abs(m_PeriodicIO.positionTicks - m_PeriodicIO.targetTicks)) < 0.5
-        && m_PeriodicIO.atSetpointCount > 5;
+        && ticksToAngle(Math.abs(m_PeriodicIO.positionTicks - m_PeriodicIO.targetTicks)) < 0.5;
+  }
+
+  private int atSetpointCount() {
+    return m_PeriodicIO.atSetpointCount;
   }
 
   public int angleToTicks(double angle) {
@@ -192,6 +195,6 @@ public class SRXPivot extends SubsystemBase {
   }
 
   public Command getGotoPositionUntilTargetCommand(POSITION pos) {
-    return getGotoPositionCommand(pos).raceWith(Commands.waitSeconds(0.05), Commands.waitUntil(this::isAtTarget));
+    return getGotoPositionCommand(pos).raceWith(Commands.waitSeconds(0.05), Commands.waitUntil(() -> atSetpointCount() > 5));
   }
 }
