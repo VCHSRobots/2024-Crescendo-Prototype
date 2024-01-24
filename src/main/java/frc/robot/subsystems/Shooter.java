@@ -46,7 +46,7 @@ public class Shooter extends SubsystemBase {
     m_orchestra.addInstrument(m_shooterMasterMotor);
 
     // Attempt to load the chrp
-    var status = m_orchestra.loadMusic("OOF.chrp");
+    var status = m_orchestra.loadMusic("mkStar.chrp");
 
     if (!status.isOK()) {
       // log error
@@ -89,8 +89,8 @@ public class Shooter extends SubsystemBase {
 
   public void play() {
     m_orchestra.play();
-    
   }
+  public void close(){}
 
   public void shoot(double percentOut) {
     double maxVoltage = 12.0;

@@ -189,7 +189,7 @@ public class RobotContainer {
     m_driverController.x().whileTrue(m_pivot.getGotoPositionCommand(POSITION.AMP));
     // m_driverController.y().whileTrue(m_pivot.getGotoPositionCommand(POSITION.SOURCE));
 
-    m_driverController.start().onTrue(Commands.runOnce(()->m_shooter.play()));
+    m_driverController.start().onTrue(Commands.runOnce(()-> m_shooter.play()));
     // increase shooter speed
     m_driverController.pov(0).onTrue(new InstantCommand(() -> m_shooter.increaseVoltage(.5)));
     // increase shooter speed
@@ -199,7 +199,7 @@ public class RobotContainer {
         .toggleOnTrue(new RunCommand(() -> m_shooter.setToCurrVoltage(), m_shooter).finallyDo(() -> m_shooter.stop()));
 
     // zero
-    m_driverController.back().onTrue(new InstantCommand(() -> m_pivot.zero(), m_pivot));
+    m_driverController.back().onTrue(new InstantCommand(() -> m_pivot.zero(), m_pivot).ignoringDisable(true));
     newSpeed();
 
     // default commands
@@ -249,6 +249,9 @@ public class RobotContainer {
     m_testController.x().whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(new Rotation2d())));
     m_testController.y()
         .whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(Rotation2d.fromDegrees(90))));
+    
+    m_testController.start().onTrue(Commands.runOnce(() -> m_shooter.play()));
+    m_testController.back().onTrue(Commands.runOnce(() -> m_shooter.close()));
 
     m_sysidController.x().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kForward));
     m_sysidController.x().and(m_sysidController.pov(180)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kReverse));
