@@ -40,7 +40,6 @@ import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.SRXPivot.POSITION;
 import frc.robot.subsystems.Climber;
 
-
 /**
  * This class is where the bulk of the robot should be declared. Since
  * Command-based is a
@@ -56,7 +55,6 @@ public class RobotContainer {
   private final SRXPivot m_pivot = new SRXPivot();
   private final Climber m_climber = new Climber();
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain; // drivetrain
-
 
   private SendableChooser<Command> autoChooser;
   private SendableChooser<String> controlChooser = new SendableChooser<>();
@@ -76,8 +74,8 @@ public class RobotContainer {
   private final CommandXboxController m_testController = new CommandXboxController(2);
   private final CommandXboxController m_sysidController = new CommandXboxController(3);
 
-    // Slew Rate Limiters to limit acceleration of joystick inputs
-    // not used by default for more driver control.
+  // Slew Rate Limiters to limit acceleration of joystick inputs
+  // not used by default for more driver control.
   private final SlewRateLimiter xLimiter = new SlewRateLimiter(0.3);
   private final SlewRateLimiter yLimiter = new SlewRateLimiter(0.3);
   private final SlewRateLimiter rotLimiter = new SlewRateLimiter(0.3);
@@ -85,7 +83,8 @@ public class RobotContainer {
   // Field-centric driving in Open Loop, can change to closed loop after
   // characterization
   // withDeadbands force requested speeds lower than that value to 0.
-  // TODO since the deadband in on the joystick input values, we should play with setting 
+  // TODO since the deadband in on the joystick input values, we should play with
+  // setting
   // no deadband (0)
   SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withDeadband(MaxSpeed * 0.005)
@@ -176,6 +175,21 @@ public class RobotContainer {
 
     m_intake.setDefaultCommand(Commands.run(() -> m_intake.stop(), m_intake));
     // m_pivot.setDefaultCommand(m_pivot.getHoldPositionCommand());
+    m_climber.setDefaultCommand(new RunCommand(() -> {
+      double leftY = -m_operatorController.getLeftY();
+      if (Math.abs(leftY) > 0.03) {
+        m_climber.setLeftWinch(leftY);
+      } else {
+        m_climber.setLeftWinch(0);
+      }
+
+      double rightY = -m_operatorController.getRightY();
+      if (Math.abs(rightY) > 0.03) {
+        m_climber.setRightWinch(rightY);
+      } else {
+        m_climber.setRightWinch(0);
+      }
+    }, m_climber));
 
     // right bumper lower pivot
     m_driverController.rightBumper()
@@ -227,8 +241,10 @@ public class RobotContainer {
     drivetrain.registerTelemetry(logger::telemeterize);
 
     // driver controller
-    // TODO "reset odometry" should set rotation to 0 on blue side, but 180 deg on red
-    // TODO default reset should not set x,y unless reseting at a known location (driver has robot at specified location)
+    // TODO "reset odometry" should set rotation to 0 on blue side, but 180 deg on
+    // red
+    // TODO default reset should not set x,y unless reseting at a known location
+    // (driver has robot at specified location)
     m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative(new Pose2d())));
     m_driverController.pov(270).whileTrue(drivetrain.applyRequest(() -> {
       double x = 0;
@@ -261,22 +277,7 @@ public class RobotContainer {
         .whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(Rotation2d.fromDegrees(90))));
 
     // climber testing controller
-    m_climber.setDefaultCommand(new RunCommand(() -> {
-      double leftY = -m_operatorController.getLeftY();
-      if (Math.abs(leftY) > 0.03) {
-        m_climber.setLeftWinch(leftY);
-      } else {
-        m_climber.setLeftWinch(0);
-      }
 
-      double rightY = -m_operatorController.getRightY();
-      if (Math.abs(rightY) > 0.03) {
-        m_climber.setRightWinch(rightY);
-      } else {
-        m_climber.setRightWinch(0);
-      }
-    }, m_climber));
-    
     m_sysidController.x().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kForward));
     m_sysidController.x().and(m_sysidController.pov(180)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kReverse));
 
