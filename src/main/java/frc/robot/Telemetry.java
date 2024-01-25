@@ -6,11 +6,13 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -19,6 +21,7 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 
 public class Telemetry {
     private final double MaxSpeed;
+    private final StructArrayPublisher<SwerveModuleState> publisher;
 
     /**
      * Construct a telemetry object, with the specified max speed of the robot
@@ -27,10 +30,10 @@ public class Telemetry {
      */
     public Telemetry(double maxSpeed) {
         MaxSpeed = maxSpeed;
-        
-/*         // Start publishing an array of module states with the "/SwerveStates" key
+
+        // Start publishing an array of module states with the "/SwerveStates" key
         publisher = NetworkTableInstance.getDefault()
-                .getStructArrayTopic("/SwerveStates", SwerveModuleState.struct).publish(); */
+                .getStructArrayTopic("/SwerveStates", SwerveModuleState.struct).publish();
         SignalLogger.start();
     }
 
@@ -55,28 +58,28 @@ public class Telemetry {
 
     /* Mechanisms to represent the swerve module states */
     private final Mechanism2d[] m_moduleMechanisms = new Mechanism2d[] {
-        new Mechanism2d(1, 1),
-        new Mechanism2d(1, 1),
-        new Mechanism2d(1, 1),
-        new Mechanism2d(1, 1),
+            new Mechanism2d(1, 1),
+            new Mechanism2d(1, 1),
+            new Mechanism2d(1, 1),
+            new Mechanism2d(1, 1),
     };
     /* A direction and length changing ligament for speed representation */
     private final MechanismLigament2d[] m_moduleSpeeds = new MechanismLigament2d[] {
-        m_moduleMechanisms[0].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
-        m_moduleMechanisms[1].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
-        m_moduleMechanisms[2].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
-        m_moduleMechanisms[3].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
+            m_moduleMechanisms[0].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
+            m_moduleMechanisms[1].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
+            m_moduleMechanisms[2].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
+            m_moduleMechanisms[3].getRoot("RootSpeed", 0.5, 0.5).append(new MechanismLigament2d("Speed", 0.5, 0)),
     };
     /* A direction changing and length constant ligament for module direction */
     private final MechanismLigament2d[] m_moduleDirections = new MechanismLigament2d[] {
-        m_moduleMechanisms[0].getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-        m_moduleMechanisms[1].getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-        m_moduleMechanisms[2].getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-        m_moduleMechanisms[3].getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
+            m_moduleMechanisms[0].getRoot("RootDirection", 0.5, 0.5)
+                    .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
+            m_moduleMechanisms[1].getRoot("RootDirection", 0.5, 0.5)
+                    .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
+            m_moduleMechanisms[2].getRoot("RootDirection", 0.5, 0.5)
+                    .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
+            m_moduleMechanisms[3].getRoot("RootDirection", 0.5, 0.5)
+                    .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
     };
 
     /* Accept the swerve drive state and telemeterize it to smartdashboard */
@@ -85,9 +88,9 @@ public class Telemetry {
         Pose2d pose = state.Pose;
         fieldTypePub.set("Field2d");
         fieldPub.set(new double[] {
-            pose.getX(),
-            pose.getY(),
-            pose.getRotation().getDegrees()
+                pose.getX(),
+                pose.getY(),
+                pose.getRotation().getDegrees()
         });
 
         /* Telemeterize the robot's general speeds */
@@ -113,10 +116,11 @@ public class Telemetry {
             SmartDashboard.putData("Module " + i, m_moduleMechanisms[i]);
         }
 
-/*         // Periodically send a set of module states
-        publisher.set(state.ModuleStates); */
+        // Periodically send a set of module states
+        publisher.set(state.ModuleStates);
 
-        SignalLogger.writeDoubleArray("odometry", new double[] {pose.getX(), pose.getY(), pose.getRotation().getDegrees()});
+        SignalLogger.writeDoubleArray("odometry",
+                new double[] { pose.getX(), pose.getY(), pose.getRotation().getDegrees() });
         SignalLogger.writeDouble("odom period", state.OdometryPeriod, "seconds");
     }
 }

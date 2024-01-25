@@ -40,10 +40,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Util.ModifiedSignalLogger;
 import frc.robot.Util.SwerveVoltageRequest;
-import frc.robot.Util.SysIdRoutine;
-import frc.robot.Util.SysIdRoutine.Direction;
 import frc.robot.Vision.Limelight;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+
 import frc.robot.generated.TunerConstants;
+import frc.robot.Util.SwerveVoltageRequest;
 
 /**
  * Class that extends the Phoenix SwerveDrivetrain class and implements
@@ -93,6 +95,11 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     }
 
     private void configurePathPlanner() {
+        double driveBaseRadius = 0;
+        for (var loc : m_moduleLocations) {
+            driveBaseRadius = Math.max(driveBaseRadius, loc.getNorm());
+        }
+
         AutoBuilder.configureHolonomic(
                 () -> this.getState().Pose, // Supplier of current robot pose
                 this::seedFieldRelative, // Consumer for seeding pose against auto
@@ -102,10 +109,21 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
                 new HolonomicPathFollowerConfig(new PIDConstants(10, 0, 0),
                         new PIDConstants(10, 0, 0),
                         TunerConstants.kSpeedAt12VoltsMps,
-                        TunerConstants.maxModuleRadius,
+                        driveBaseRadius,
                         new ReplanningConfig()),
-                // TODO verify how to change this correctly and configure more smart
-                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+                () -> {
+                    // Boolean supplier that controls when the path will be mirrored for the red
+                    // alliance
+                    // This will flip the path being followed to the red side of the field during
+                    // auto only.
+                    // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+                    var alliance = DriverStation.getAlliance();
+                    if (alliance.isPresent()) {
+                        return alliance.get() == DriverStation.Alliance.Red & !DriverStation.isTeleop();
+                    }
+                    return false;
+                },
                 this); // Subsystem for requirements
     }
 
@@ -136,16 +154,20 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     private SwerveVoltageRequest driveVoltageRequest = new SwerveVoltageRequest(true);
 
     private SysIdRoutine m_driveSysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(Volts.of(0.5).per(Seconds.of(1)), Volts.of(5), null, ModifiedSignalLogger.logState()),
+            new SysIdRoutine.Config(Volts.of(0.5).per(Seconds.of(1)), Volts.of(5), null,
+                    ModifiedSignalLogger.logState()),
             new SysIdRoutine.Mechanism(
-                    (Measure<Voltage> volts) -> {setControl(driveVoltageRequest.withVoltage(volts.in(Volts)));},
+                    (Measure<Voltage> volts) -> {
+                        setControl(driveVoltageRequest.withVoltage(volts.in(Volts)));
+                    },
                     null,
                     this));
 
     private SwerveVoltageRequest steerVoltageRequest = new SwerveVoltageRequest(false);
 
     private SysIdRoutine m_steerSysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(Volts.of(0.5).per(Seconds.of(1)), Volts.of(5), null, ModifiedSignalLogger.logState()),
+            new SysIdRoutine.Config(Volts.of(0.5).per(Seconds.of(1)), Volts.of(5), null,
+                    ModifiedSignalLogger.logState()),
             new SysIdRoutine.Mechanism(
                     (Measure<Voltage> volts) -> setControl(steerVoltageRequest.withVoltage(volts.in(Volts))),
                     null,
