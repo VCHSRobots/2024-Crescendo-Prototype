@@ -38,6 +38,11 @@ public final class Constants {
     public static CanDeviceId kPivotFollowerId = new CanDeviceId(6, kRioBus);
   }
 
+  public static class ClimberConstants {
+    public static int kLeftWinchMotorId = 6;
+    public static int kRightWinchMotorId = 5;
+  }
+
   public static String kCanivoreBus = "canivore";
   public static String kRioBus = "rio";
 }
