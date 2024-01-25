@@ -32,10 +32,11 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Util.ModifiedSignalLogger;
-import frc.robot.Util.SwerveVoltageRequest;
-import frc.robot.Util.SysIdRoutine;
-import frc.robot.Util.SysIdRoutine.Direction;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+
 import frc.robot.generated.TunerConstants;
+import frc.robot.Util.SwerveVoltageRequest;
 
 /**
  * Class that extends the Phoenix SwerveDrivetrain class and implements
@@ -83,6 +84,11 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     }
 
     private void configurePathPlanner() {
+        double driveBaseRadius = 0;
+        for (var loc : m_moduleLocations) {
+            driveBaseRadius = Math.max(driveBaseRadius, loc.getNorm());
+        }
+
         AutoBuilder.configureHolonomic(
                 () -> this.getState().Pose, // Supplier of current robot pose
                 this::seedFieldRelative, // Consumer for seeding pose against auto
@@ -92,10 +98,18 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
                 new HolonomicPathFollowerConfig(new PIDConstants(10, 0, 0),
                         new PIDConstants(10, 0, 0),
                         TunerConstants.kSpeedAt12VoltsMps,
-                       Units.inchesToMeters(TunerConstants.maxModuleRadius),
+                        driveBaseRadius,
                         new ReplanningConfig()),
-                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red, // don't flip path TODO verify
-                                                                                         // how to change this correctly
+                () -> {
+                    // Boolean supplier that controls when the path will be mirrored for the red
+                    // alliance
+                    // This will flip the path being followed to the red side of the field during
+                    // auto only.
+                    // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+                    var alliance = DriverStation.getAlliance();
+                    return !DriverStation.isTeleop() && alliance.orElse(Alliance.Blue) == Alliance.Red;
+                },
                 this); // Subsystem for requirements
     }
 
