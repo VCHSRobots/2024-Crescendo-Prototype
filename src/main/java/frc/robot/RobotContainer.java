@@ -12,6 +12,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -26,9 +27,9 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.Util.SysIdRoutine.Direction;
 import frc.robot.Vision.Limelight;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Intake;
@@ -49,6 +50,8 @@ public class RobotContainer {
   private final Intake m_intake = new Intake();
   private final Shooter m_shooter = new Shooter();
   private final SRXPivot m_pivot = new SRXPivot();
+  public final CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain; // drivetrain
+
 
   private SendableChooser<Command> autoChooser;
   private SendableChooser<String> controlChooser = new SendableChooser<>();
@@ -67,17 +70,20 @@ public class RobotContainer {
   private final CommandXboxController m_testController = new CommandXboxController(2);
   private final CommandXboxController m_sysidController = new CommandXboxController(3);
 
-  CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain; // drivetrain
+    // Slew Rate Limiters to limit acceleration of joystick inputs
+    // not used by default for more driver control.
+  private final SlewRateLimiter xLimiter = new SlewRateLimiter(0.3);
+  private final SlewRateLimiter yLimiter = new SlewRateLimiter(0.3);
+  private final SlewRateLimiter rotLimiter = new SlewRateLimiter(0.3);
 
   // Field-centric driving in Open Loop, can change to closed loop after
   // characterization
+  // withDeadbands force requested speeds lower than that value to 0.
+  // TODO since the deadband in on the joystick input values, we should play with setting 
+  // no deadband (0)
   SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withDeadband(MaxSpeed * 0.005)
       .withRotationalDeadband(AngularRate * 0.005);
-  // Field-centric driving in Closed Loop. Comment above and uncomment below.
-  // SwerveRequest.FieldCentric drive = new
-  // SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.Velocity).withDecoadband(MaxSpeed
-  // * 0.1).withRotationalDeadband(AngularRate * 0.1);
 
   SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
   SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric()
@@ -214,6 +220,8 @@ public class RobotContainer {
     drivetrain.registerTelemetry(logger::telemeterize);
 
     // driver controller
+    // TODO "reset odometry" should set rotation to 0 on blue side, but 180 deg on red
+    // TODO default reset should not set x,y unless reseting at a known location (driver has robot at specified location)
     m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
     m_driverController.pov(270).whileTrue(drivetrain.applyRequest(() -> {
       double x = 0;

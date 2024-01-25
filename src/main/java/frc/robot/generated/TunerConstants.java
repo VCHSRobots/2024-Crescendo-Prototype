@@ -62,7 +62,7 @@ public class TunerConstants {
     // Theoretical free speed (m/s) at 12v applied output;
     // This needs to be tuned to your individual robot
     public static final double kSpeedAt12VoltsMps = 107.0 / kDriveGearRatio * Math.PI * 2
-            * Units.inchesToMeters(kWheelRadiusInches); // 107 rps =
+            * Units.inchesToMeters(kWheelRadiusInches); // TODO actually verify this on new battery
 
     private static final boolean kSteerMotorReversed = true;
     private static final boolean kInvertLeftSide = false;
@@ -131,17 +131,6 @@ public class TunerConstants {
 
     private static final double kBackRightXPosInches = -10.375;
     private static final double kBackRightYPosInches = -10.375;
-
-    private static final double FrontLeftPos = Math
-            .sqrt(Math.pow(kFrontLeftXPosInches, 2) + Math.pow(kFrontLeftYPosInches, 2));
-    private static final double FrontRightPos = Math
-            .sqrt(Math.pow(kFrontRightXPosInches, 2) + Math.pow(kFrontRightYPosInches, 2));
-    private static final double BackLeftPos = Math
-            .sqrt(Math.pow(kBackLeftXPosInches, 2) + Math.pow(kBackLeftYPosInches, 2));
-    private static final double BackRightPos = Math
-            .sqrt(Math.pow(kBackRightXPosInches, 2) + Math.pow(kBackRightYPosInches, 2));
-    public static final double maxModuleRadius = Math.max(FrontLeftPos,
-            Math.max(FrontRightPos, Math.max(BackRightPos, BackLeftPos)));
 
     private static final SwerveModuleConstants FrontLeft = ConstantCreator.createModuleConstants(
             kFrontLeftSteerMotorId, kFrontLeftDriveMotorId, kFrontLeftEncoderId, kFrontLeftEncoderOffset,
