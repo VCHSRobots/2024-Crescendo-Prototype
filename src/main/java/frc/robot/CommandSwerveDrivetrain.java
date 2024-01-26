@@ -50,13 +50,15 @@ import frc.robot.Util.SwerveVoltageRequest;
 public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsystem {
     private final SwerveRequest.ApplyChassisSpeeds autoRequest = new SwerveRequest.ApplyChassisSpeeds();
 
-    private SendableChooser<Double> musicChooser = new SendableChooser<>();
+    
 
     public Orchestra m_Orchestra = new Orchestra();
+    public String[] musicFiles = new String[1];
+
+    musicFiles[0] = "Meglovania.chrp"
 
     public void setupOrchestra(){
-        musicChooser.addOption("Meglovania", 1.0);
-        SmartDashboard.putData("Song Chooser", musicChooser);
+        
     }
     private void makeOrchestra() {
 
@@ -65,7 +67,8 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             m_Orchestra.addInstrument(mod.getDriveMotor());
             m_Orchestra.addInstrument(mod.getSteerMotor());
         }
-        var status = m_Orchestra.loadMusic("Meglovania.chrp");
+
+        var status = m_Orchestra.loadMusic();
     }
     
   

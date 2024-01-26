@@ -53,6 +53,7 @@ public class RobotContainer {
   private final SRXPivot m_pivot = new SRXPivot();
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain; // drivetrain
 
+  private SendableChooser<Integer> musicChooser = new SendableChooser<>();
 
   private SendableChooser<Command> autoChooser;
   private SendableChooser<String> controlChooser = new SendableChooser<>();
@@ -143,6 +144,11 @@ public class RobotContainer {
     Shuffleboard.getTab("ss").add("intake", m_intake);
     Shuffleboard.getTab("ss").add("shooter", m_shooter);
     Shuffleboard.getTab("ss").add("pivot", m_pivot);
+
+
+    musicChooser.addOption("Meglovania", 0);
+    SmartDashboard.putData("Song Chooser", musicChooser);
+    musicChooser.getSelected();
   }
 
   /**
