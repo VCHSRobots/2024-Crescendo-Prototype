@@ -16,6 +16,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -46,7 +47,7 @@ public class Shooter extends SubsystemBase {
     m_orchestra.addInstrument(m_shooterMasterMotor);
 
     // Attempt to load the chrp
-    var status = m_orchestra.loadMusic("mkStar.chrp");
+    var status = m_orchestra.loadMusic("zeldaOverworld1.chrp");
 
     if (!status.isOK()) {
       // log error
@@ -89,8 +90,11 @@ public class Shooter extends SubsystemBase {
 
   public void play() {
     m_orchestra.play();
+    SmartDashboard.putBoolean("isPlaying", m_orchestra.isPlaying());
   }
-  public void close(){}
+  public void close(){
+    m_orchestra.stop();
+  }
 
   public void shoot(double percentOut) {
     double maxVoltage = 12.0;
