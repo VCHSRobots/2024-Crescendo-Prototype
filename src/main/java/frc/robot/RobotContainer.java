@@ -260,6 +260,7 @@ public class RobotContainer {
     
     m_testController.start().onTrue(Commands.runOnce(() -> m_shooter.play()));
     m_testController.back().onTrue(Commands.runOnce(() -> m_shooter.close()));
+    m_testController.pov(0).toggleOnTrue(Commands.startEnd(()->drivetrain.m_Orchestra.play(), ()->drivetrain.m_Orchestra.stop(), drivetrain));
 
     m_sysidController.x().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kForward));
     m_sysidController.x().and(m_sysidController.pov(180)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kReverse));
