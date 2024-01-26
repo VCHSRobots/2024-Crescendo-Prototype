@@ -30,6 +30,8 @@ import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
@@ -48,19 +50,26 @@ import frc.robot.Util.SwerveVoltageRequest;
 public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsystem {
     private final SwerveRequest.ApplyChassisSpeeds autoRequest = new SwerveRequest.ApplyChassisSpeeds();
 
+    private SendableChooser<Double> musicChooser = new SendableChooser<>();
+
     public Orchestra m_Orchestra = new Orchestra();
 
+    public void setupOrchestra(){
+        musicChooser.addOption("Meglovania", 1.0);
+        SmartDashboard.putData("Song Chooser", musicChooser);
+    }
     private void makeOrchestra() {
+
         for (SwerveModule mod : Modules) {
 
             m_Orchestra.addInstrument(mod.getDriveMotor());
             m_Orchestra.addInstrument(mod.getSteerMotor());
-
         }
         var status = m_Orchestra.loadMusic("Meglovania.chrp");
     }
-
     
+  
+  
 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency,
             SwerveModuleConstants... modules) {
