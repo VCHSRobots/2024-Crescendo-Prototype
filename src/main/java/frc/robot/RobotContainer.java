@@ -222,7 +222,7 @@ public class RobotContainer {
     // driver controller
     // TODO "reset odometry" should set rotation to 0 on blue side, but 180 deg on red
     // TODO default reset should not set x,y unless reseting at a known location (driver has robot at specified location)
-    m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
+    m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative(new Pose2d())));
     m_driverController.pov(270).whileTrue(drivetrain.applyRequest(() -> {
       double x = 0;
       double y = 0;
