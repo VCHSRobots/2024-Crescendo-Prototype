@@ -53,7 +53,7 @@ public class RobotContainer {
   private final SRXPivot m_pivot = new SRXPivot();
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain; // drivetrain
 
-  private SendableChooser<Integer> musicChooser = new SendableChooser<>();
+  private static SendableChooser<Integer> musicChooser = new SendableChooser<>();
 
   private SendableChooser<Command> autoChooser;
   private SendableChooser<String> controlChooser = new SendableChooser<>();
@@ -72,8 +72,8 @@ public class RobotContainer {
   private final CommandXboxController m_testController = new CommandXboxController(2);
   private final CommandXboxController m_sysidController = new CommandXboxController(3);
 
-    // Slew Rate Limiters to limit acceleration of joystick inputs
-    // not used by default for more driver control.
+  // Slew Rate Limiters to limit acceleration of joystick inputs
+  // not used by default for more driver control.
   private final SlewRateLimiter xLimiter = new SlewRateLimiter(0.3);
   private final SlewRateLimiter yLimiter = new SlewRateLimiter(0.3);
   private final SlewRateLimiter rotLimiter = new SlewRateLimiter(0.3);
@@ -81,7 +81,8 @@ public class RobotContainer {
   // Field-centric driving in Open Loop, can change to closed loop after
   // characterization
   // withDeadbands force requested speeds lower than that value to 0.
-  // TODO since the deadband in on the joystick input values, we should play with setting 
+  // TODO since the deadband in on the joystick input values, we should play with
+  // setting
   // no deadband (0)
   SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withDeadband(MaxSpeed * 0.005)
@@ -112,7 +113,6 @@ public class RobotContainer {
    */
   public RobotContainer() {
 
-    
     // Detect if controllers are missing / Stop multiple warnings
     DriverStation.silenceJoystickConnectionWarning(true);
 
@@ -145,10 +145,16 @@ public class RobotContainer {
     Shuffleboard.getTab("ss").add("shooter", m_shooter);
     Shuffleboard.getTab("ss").add("pivot", m_pivot);
 
-
-    musicChooser.addOption("Meglovania", 0);
+    musicChooser.setDefaultOption("Meglovania", 0);
+    musicChooser.addOption("Zelda", 1);
+    musicChooser.addOption("pokemon battle", 2);
+    musicChooser.addOption("Rickroll", 3);
     SmartDashboard.putData("Song Chooser", musicChooser);
-    musicChooser.getSelected();
+
+  }
+
+  public static int currentMusic() {
+    return musicChooser.getSelected();
   }
 
   /**
@@ -201,7 +207,7 @@ public class RobotContainer {
     m_driverController.x().whileTrue(m_pivot.getGotoPositionCommand(POSITION.AMP));
     // m_driverController.y().whileTrue(m_pivot.getGotoPositionCommand(POSITION.SOURCE));
 
-    m_driverController.start().onTrue(Commands.runOnce(()-> m_shooter.play()));
+    m_driverController.start().onTrue(Commands.runOnce(() -> m_shooter.play()));
     // increase shooter speed
     m_driverController.pov(0).onTrue(new InstantCommand(() -> m_shooter.increaseVoltage(.5)));
     // increase shooter speed
@@ -231,8 +237,10 @@ public class RobotContainer {
     drivetrain.registerTelemetry(logger::telemeterize);
 
     // driver controller
-    // TODO "reset odometry" should set rotation to 0 on blue side, but 180 deg on red
-    // TODO default reset should not set x,y unless reseting at a known location (driver has robot at specified location)
+    // TODO "reset odometry" should set rotation to 0 on blue side, but 180 deg on
+    // red
+    // TODO default reset should not set x,y unless reseting at a known location
+    // (driver has robot at specified location)
     m_driverController.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
     m_driverController.pov(270).whileTrue(drivetrain.applyRequest(() -> {
       double x = 0;
@@ -263,10 +271,13 @@ public class RobotContainer {
     m_testController.x().whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(new Rotation2d())));
     m_testController.y()
         .whileTrue(drivetrain.applyRequest(() -> point.withModuleDirection(Rotation2d.fromDegrees(90))));
-    
+
     m_testController.start().onTrue(Commands.runOnce(() -> m_shooter.play()));
     m_testController.back().onTrue(Commands.runOnce(() -> m_shooter.close()));
-    m_testController.pov(0).toggleOnTrue(Commands.startEnd(()->drivetrain.m_Orchestra.play(), ()->drivetrain.m_Orchestra.stop(), drivetrain));
+    m_testController.pov(0).toggleOnTrue(Commands.startEnd(() -> {
+      drivetrain.loadOrchestra();
+      drivetrain.m_Orchestra.play();
+    }, () -> drivetrain.m_Orchestra.stop(), drivetrain));
 
     m_sysidController.x().and(m_sysidController.pov(0)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kForward));
     m_sysidController.x().and(m_sysidController.pov(180)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kReverse));

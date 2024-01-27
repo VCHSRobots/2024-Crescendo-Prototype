@@ -50,16 +50,9 @@ import frc.robot.Util.SwerveVoltageRequest;
 public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsystem {
     private final SwerveRequest.ApplyChassisSpeeds autoRequest = new SwerveRequest.ApplyChassisSpeeds();
 
-    
-
     public Orchestra m_Orchestra = new Orchestra();
-    public String[] musicFiles = new String[1];
+    String[] musicFile = { "Meglovania.chrp", "zeldaOverworld.chrp", "battle.chrp", "rickRoll.chrp" };
 
-    musicFiles[0] = "Meglovania.chrp"
-
-    public void setupOrchestra(){
-        
-    }
     private void makeOrchestra() {
 
         for (SwerveModule mod : Modules) {
@@ -67,12 +60,10 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             m_Orchestra.addInstrument(mod.getDriveMotor());
             m_Orchestra.addInstrument(mod.getSteerMotor());
         }
-
-        var status = m_Orchestra.loadMusic();
     }
-    
-  
-  
+    public void loadOrchestra() {
+        m_Orchestra.loadMusic(musicFile[RobotContainer.currentMusic()]);
+    }
 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency,
             SwerveModuleConstants... modules) {
