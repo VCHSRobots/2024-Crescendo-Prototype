@@ -28,6 +28,7 @@ import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
@@ -253,5 +254,20 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             }
         }
         return status;
+    }
+
+    @Override
+    public void periodic() {
+        for (int i = 0; i < ModuleCount; i++) {
+            SmartDashboard.putNumber("Module " + i + " Steer Stator Current",
+                    Modules[i].getSteerMotor().getStatorCurrent().getValueAsDouble());
+            SmartDashboard.putNumber("Module " + i + " Drive Stator Current",
+                    Modules[i].getDriveMotor().getStatorCurrent().getValueAsDouble());
+
+            SmartDashboard.putNumber("Module " + i + " Steer Supply Current",
+                    Modules[i].getSteerMotor().getSupplyCurrent().getValueAsDouble());
+            SmartDashboard.putNumber("Module " + i + " Drive Supply Current",
+                    Modules[i].getDriveMotor().getSupplyCurrent().getValueAsDouble());
+        }
     }
 }

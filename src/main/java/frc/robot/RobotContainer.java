@@ -14,10 +14,12 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -32,6 +34,8 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.Util.SwerveFieldCentricFacingAngleProfiledRequest;
+import frc.robot.Util.Util;
 import frc.robot.Vision.Limelight;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Intake;
@@ -58,7 +62,7 @@ public class RobotContainer {
   private SendableChooser<Double> speedChooser = new SendableChooser<>();
   private double MaxSpeed = TunerConstants.kSpeedAt12VoltsMps; // Initial max is true top speed
   private final double TurtleSpeed = 0.1; // Reduction in speed from Max Speed, 0.1 = 10%
-  private final double MaxAngularRate = Math.PI * 2.0; // .75 rotation per second max angular velocity. Adjust for max
+  private final double MaxAngularRate = Math.PI * 4.0; // .75 rotation per second max angular velocity. Adjust for max
                                                        // turning rate speed.
   private final double TurtleAngularRate = Math.PI * 0.5; // .75 rotation per second max angular velocity. Adjust for
                                                           // max turning rate speed.
@@ -85,12 +89,10 @@ public class RobotContainer {
   SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withDeadband(MaxSpeed * 0.005)
       .withRotationalDeadband(AngularRate * 0.005);
-  SwerveRequest.FieldCentricFacingAngle driveLockedAngle = new SwerveRequest.FieldCentricFacingAngle()
+  SwerveFieldCentricFacingAngleProfiledRequest driveLockedAngle = new SwerveFieldCentricFacingAngleProfiledRequest()
       .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withDeadband(MaxSpeed * 0.005)
-      .withRotationalDeadband(AngularRate * 0.005);
-  {
-    driveLockedAngle.HeadingController = new PhoenixPIDController(5, 0, 0);
-  }
+      .withRotationalDeadband(AngularRate * 0.005)
+      .withHeadingController(new ProfiledPIDController(5, 0, 0, new Constraints(Math.PI * 2.0, Math.PI * 4.0)));
 
   SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
   SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric()
@@ -137,14 +139,14 @@ public class RobotContainer {
     autoChooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Chooser", autoChooser);
 
-    speedChooser.addOption("100%", 1.0);
+    speedChooser.setDefaultOption("100%", 1.0);
     speedChooser.addOption("95%", 0.95);
     speedChooser.addOption("90%", 0.9);
     speedChooser.addOption("85%", 0.85);
     speedChooser.addOption("80%", 0.8);
     speedChooser.addOption("75%", 0.75);
     speedChooser.addOption("70%", 0.7);
-    speedChooser.setDefaultOption("65%", 0.65);
+    speedChooser.addOption("65%", 0.65);
     speedChooser.addOption("60%", 0.6);
     speedChooser.addOption("55%", 0.55);
     speedChooser.addOption("50%", 0.5);
@@ -210,7 +212,8 @@ public class RobotContainer {
     m_driverController.rightStick()
         .toggleOnTrue(
             Commands.startEnd(() -> {
-              lockedAngle = drivetrain.getState().Pose.getRotation();
+              // lockedAngle = drivetrain.getState().Pose.getRotation();
+              lockedAngle = new Rotation2d();
               isSwerveLockingAngle = true;
             }, () -> isSwerveLockingAngle = false));
 
@@ -224,15 +227,20 @@ public class RobotContainer {
 
     // zero
     m_driverController.back().onTrue(new InstantCommand(() -> m_pivot.zero(), m_pivot));
-    newSpeed();
 
     // default commands
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
         drivetrain.applyRequest(() -> {
           SmartDashboard.putNumber("locked angle", lockedAngle.getDegrees());
-          var x = MathUtil.applyDeadband(-m_driverController.getLeftY(), 0.1);
-          var y = MathUtil.applyDeadband(-m_driverController.getLeftX(), 0.1);
-          var r = MathUtil.applyDeadband(-m_driverController.getRightX(), 0.1);
+          double cubicWeight = 0.75;
+          var x = Util.cubic(MathUtil.applyDeadband(-m_driverController.getLeftY(), 0.1), cubicWeight);
+          var y = Util.cubic(MathUtil.applyDeadband(-m_driverController.getLeftX(), 0.1), cubicWeight);
+          var r = Util.cubic(MathUtil.applyDeadband(-m_driverController.getRightX(), 0.1), cubicWeight);
+
+          // stop locking angle if at target
+          if (Math.abs(drivetrain.getState().Pose.getRotation().getDegrees() - lockedAngle.getDegrees()) < 3) {
+            isSwerveLockingAngle = false;
+          }
           if (!isSwerveLockingAngle) {
             return drive.withVelocityX(x * MaxSpeed) // Drive forward -Y
                 .withVelocityY(y * MaxSpeed) // Drive left with negative X (left)
