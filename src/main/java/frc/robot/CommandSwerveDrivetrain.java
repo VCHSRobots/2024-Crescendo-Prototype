@@ -51,7 +51,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     private final SwerveRequest.ApplyChassisSpeeds autoRequest = new SwerveRequest.ApplyChassisSpeeds();
 
     public Orchestra m_Orchestra = new Orchestra();
-    String[] musicFile = { "Meglovania.chrp", "zeldaOverworld.chrp", "battle.chrp", "rickRoll.chrp" };
+    String[] musicFile = { "Meglovania.chrp", "zeldaOverworld1.chrp", "battle.chrp", "rickRoll.chrp" };
 
     private void makeOrchestra() {
 
