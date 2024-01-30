@@ -2,8 +2,8 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 1.1518350964629855,
-      "y": 4.104648209296419
+      "x": 1.5770914424711733,
+      "y": 5.55
     },
     "rotation": 0
   },
@@ -20,7 +20,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "right(R)"
+            "pathName": "mid(M)"
           }
         },
         {
@@ -32,18 +32,12 @@
         {
           "type": "path",
           "data": {
-            "pathName": "mid(R)"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "shoot"
+            "pathName": "M4f"
           }
         }
       ]
     }
   },
-  "folder": "3p R",
+  "folder": "3p M",
   "choreoAuto": false
 }
